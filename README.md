@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Laravel Enterprise Workflow System
 
 A scalable Laravel 12 application designed for **massive-scale data processing** (100-200 million rows), featuring queue-based architecture, multi-database management, and enterprise-grade workflow automation.
@@ -126,3 +127,7 @@ php artisan queue:retry all
 ## License
 
 MIT License - Open source for learning and development.
+=======
+# unique-data-handling-project
+Laravel-based system for cleaning raw data, processing workflows, and executing targeted email campaigns.
+>>>>>>> 9fd942668ad4474affe41fe9bd6e49048c229e40
