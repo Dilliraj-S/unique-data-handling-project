@@ -1,0 +1,9 @@
+<svg width="120" height="48" viewBox="0 0 120 48" xmlns="http://www.w3.org/2000/svg">
+  <rect width="120" height="48" rx="8" fill="#FEF6E6"/>
+  <rect width="120" height="48" rx="8" fill="url(#unmappedStripes)" opacity="0.15"/>
+  <defs>
+    <pattern id="unmappedStripes" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+      <line x1="0" y1="0" x2="0" y2="6" stroke="#F59E0B" stroke-width="1.5" stroke-opacity="0.4"/>
+    </pattern>
+  </defs>
+</svg>

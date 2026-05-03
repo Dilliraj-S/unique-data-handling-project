@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Permissions UI</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    ul { list-style-type: none; padding-left: 20px; }
+    li { margin: 4px 0; }
+    .module { font-weight: bold; margin-top: 10px; }
+    label { margin-left: 4px; }
+  </style>
+</head>
+<body>
+
+<h2>Permissions</h2>
+<div id="permissions-container"></div>
+<button onclick="logSelectedPermissions()">Log Selected Permissions</button>
+
+<script>
+const permissions = {
+  "skeleton": {
+    "Dashboard": {
+      "permissions": {
+        "create": "LG8",
+        "view": "KU7",
+        "edit": "AKM"
+      }
+    },
+    "Home": {
+      "permissions": {
+        "view": "SD8"
+      }
+    }
+  },
+  "Profiles": {
+    "permissions": {
+      "create": "XJN",
+      "view": "EP4"
+    },
+    "My Profile": {
+      "permissions": {
+        "edit": "FFM"
+      }
+    }
+  }
+};
+
+const preselected = {
+  "skeleton": {
+    "Dashboard": {
+      "permissions": {
+        "view": "KU7"
+      }
+    }
+  },
+  "Profiles": {
+    "permissions": {
+      "view": "EP4"
+    }
+  }
+};
+
+function permissionsRender(viewPermissions, preselectPermissions = null) {
+  const container = document.getElementById('permissions-container');
+  container.innerHTML = '';
+
+  function createTree(data, preselectedData, parentPath = '') {
+    const ul = document.createElement('ul');
+
+    for (const [moduleName, moduleContent] of Object.entries(data)) {
+      const li = document.createElement('li');
+      const subPath = parentPath ? `${parentPath}::${moduleName}` : moduleName;
+      li.innerHTML = `<span class="module">${moduleName}</span>`;
+
+      const subUL = document.createElement('ul');
+
+      if (moduleContent.permissions) {
+        for (const [action, code] of Object.entries(moduleContent.permissions)) {
+          const checkboxId = `${subPath}::${action}`;
+          const checked = isChecked(preselectedData, subPath, action, code);
+
+          const permLI = document.createElement('li');
+          permLI.innerHTML = `
+            <label>
+              <input type="checkbox" data-code="${code}" id="${checkboxId}" ${checked ? 'checked' : ''}>
+              ${action} (${code})
+            </label>
+          `;
+          subUL.appendChild(permLI);
+        }
+      }
+
+      // Recursively handle submodules
+      const subModules = Object.entries(moduleContent).filter(([k]) => k !== 'permissions');
+      for (const [subName, subContent] of subModules) {
+        const subTree = createTree({ [subName]: subContent }, preselectedData?.[moduleName] || {}, subPath);
+        subUL.appendChild(subTree);
+      }
+
+      li.appendChild(subUL);
+      ul.appendChild(li);
+    }
+    return ul;
+  }
+
+  container.appendChild(createTree(viewPermissions, preselectPermissions));
+}
+
+function isChecked(preselectedData, path, action, code) {
+  if (!preselectedData) return false;
+  const pathParts = path.split("::");
+  let current = preselectedData;
+  for (const part of pathParts) {
+    current = current?.[part];
+    if (!current) return false;
+  }
+  return current?.permissions?.[action] === code;
+}
+
+function logSelectedPermissions() {
+  const checked = Array.from(document.querySelectorAll('input[type="checkbox"]:checked'))
+    .map(input => input.dataset.code);
+  console.log('Selected permission codes:', checked);
+}
+
+// Call the function
+permissionsRender(permissions, preselected);
+</script>
+
+</body>
+</html>

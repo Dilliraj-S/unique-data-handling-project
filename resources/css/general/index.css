@@ -1,0 +1,58 @@
+/* All @import statements must be first */
+/*!
+ * Skeleton Pack - Minified CSS Stylesheet
+ * Created by ChronoSpark Solutions
+ * Website: https://chronosparksolutions.com/
+ * Version: 1.0.0
+ * Description: A lightweight, optimized CSS bundle with styles for UI components, animations, and responsive design.
+ * Author: ChronoSpark Solutions Team
+ * License: MIT
+ * Last Updated: March 25, 2025
+ * 
+ * © 2025 ChronoSpark Solutions. All rights reserved.
+ * "Where Time Meets Technology"
+ */
+
+/* ───── External Lib Styles ───── */
+
+@import url('../../libs/addons/waves/waves.min.css');
+@import url('../../libs/addons/fancybox/fancybox.min.css');
+@import url('../../libs/alerts/css-toast/css-toast.min.css');
+@import url('../../libs/alerts/sweetalert2/sweetalert2.min.css');
+
+/* ───── Icons ───── */
+@import url('../../libs/icons/fontawesome/css/all.min.css');
+@import url('../../libs/icons/bootstrap-icons/bootstrap-icons.min.css');
+@import url('../../libs/icons/boxicons/css/boxicons.min.css');
+@import url('../../libs/icons/tabler-icons/tabler-icons.min.css');
+@import url('../../libs/icons/remixicon/remixicon.css');
+@import url('../../libs/icons/materialdesignicons/materialdesignicons.css');
+
+/* ───── Bootstrap ───── */
+@import "bootstrap/dist/css/bootstrap.min.css";
+
+/* ───── DataTables (BS5 + Extensions) ───── */
+@import "datatables.net-bs5/css/dataTables.bootstrap5.min.css";
+@import "datatables.net-buttons-bs5/css/buttons.bootstrap5.min.css";
+@import "datatables.net-responsive-bs5/css/responsive.bootstrap5.min.css";
+@import "datatables.net-autofill-bs5/css/autoFill.bootstrap5.min.css";
+@import "datatables.net-colreorder-bs5/css/colReorder.bootstrap5.min.css";
+@import "datatables.net-columncontrol-bs5/css/columnControl.bootstrap5.min.css";
+@import "datatables.net-fixedcolumns-bs5/css/fixedColumns.bootstrap5.min.css";
+@import "datatables.net-fixedheader-bs5/css/fixedHeader.bootstrap5.min.css";
+@import "datatables.net-keytable-bs5/css/keyTable.bootstrap5.min.css";
+@import "datatables.net-rowgroup-bs5/css/rowGroup.bootstrap5.min.css";
+@import "datatables.net-rowreorder-bs5/css/rowReorder.bootstrap5.min.css";
+@import "datatables.net-scroller-bs5/css/scroller.bootstrap5.min.css";
+@import "datatables.net-searchbuilder-bs5/css/searchBuilder.bootstrap5.min.css";
+@import "datatables.net-searchpanes-bs5/css/searchPanes.bootstrap5.min.css";
+@import "datatables.net-select-bs5/css/select.bootstrap5.min.css";
+@import "datatables.net-staterestore-bs5/css/stateRestore.bootstrap5.min.css";
+
+
+/* ───── Other UI Libraries ───── */
+@import "select2/dist/css/select2.min.css";
+@import "@yaireo/tagify/dist/tagify.css";
+@import "quill/dist/quill.snow.css";
+@import "daterangepicker/daterangepicker.css";
+@import "node-waves/dist/waves.min.css";

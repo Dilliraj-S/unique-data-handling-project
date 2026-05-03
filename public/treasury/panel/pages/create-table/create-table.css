@@ -1,0 +1,46 @@
+#create-table-view thead th{
+    font-size: 11px !important;
+    text-align: center;
+    padding: 3px;
+    vertical-align: middle;
+    background: #1db4cd;
+    color: #fff;
+    border: 1px solid #fff;
+}
+#create-table-view tbody td{
+    font-size: 15px !important;
+    text-align: left;
+    padding: 10px;
+    vertical-align: middle;
+}
+#create-table-view td .form-check{
+    margin:0px !important;
+    align-items: center;
+    justify-content: center;
+    display: flex;
+    text-align: center;
+}
+#create-table-view td .form-check input{
+    border-width: 1px !important;
+}
+#create-table-view .form-create-input, #create-table-view .form-create-select{
+    padding: 6px 8px !important;
+    min-width: 90px;
+    font-size: 15px;
+    display: block;
+    width: 100%;
+    color: #3b4056;
+    appearance: none;
+    background-color: transparent;
+    background-clip: padding-box;
+    border: 1px solid #cfd0d6;
+    border-radius: 5px;
+} 
+#create-table-view .form-create-input:focus,
+#create-table-view .form-create-input:active,
+#create-table-view .form-create-select:focus,
+#create-table-view .form-create-select:active
+{
+    border: 1px solid #1db4cd;
+} 
+

@@ -1,0 +1,3793 @@
+{{-- @php
+    $userRole = App\Http\Classes\UserHelper::getCurrentUser('role');
+@endphp --}}
+
+@extends('layouts.system-app')
+@section('title', 'Drift Emails')
+
+@section('top-style')
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    {{-- <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" /> --}}
+    {{-- <link href="/css/select2.min.css" rel="stylesheet"> --}}
+    <!-- Removed missing drift-emails-report-dropdown.css -->
+    <style>
+        body {
+            background-color: #f4f6f9;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            border: none;
+            border-radius: 10px;
+            background: #ffffff;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 25px;
+        }
+
+        .card-header {
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 15px 20px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #1f2937;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .form-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+
+        .form-control,
+        select,
+        .form-select {
+            height: 42px;
+            font-size: 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 0 12px;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-control:focus,
+        select:focus,
+        .form-select:focus {
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+            outline: none;
+        }
+
+        .select2-container {
+            width: 100% !important;
+        }
+
+        /* Only apply width override to From Email and Select Report Filters dropdowns */
+        [id^="sequence-from-email-"]+.select2-container .select2-dropdown,
+        [id^="sequence-report-filters-"]+.select2-container .select2-dropdown {
+            min-width: 0 !important;
+            width: 47.6% !important;
+            box-sizing: border-box !important;
+        }
+
+        /* For multi-select dropdowns as well */
+        [id^="sequence-from-email-"]+.select2-container--default .select2-selection--multiple .select2-dropdown,
+        [id^="sequence-report-filters-"]+.select2-container--default .select2-selection--multiple .select2-dropdown {
+            min-width: 0 !important;
+            width: 47.6% !important;
+            box-sizing: border-box !important;
+        }
+
+        .select2-container--default .select2-selection--multiple {
+            min-width: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+
+        .spin-refresh {
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .glassy-cute-btn {
+            border: none;
+            background: rgba(255, 255, 255, 0.28);
+            border-radius: 50%;
+            padding: 0;
+            width: 38px;
+            height: 38px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 12px 0 rgba(30, 180, 205, 0.11), 0 1.5px 4px 0 rgba(80, 170, 255, 0.08);
+            backdrop-filter: blur(6px);
+            transition: box-shadow 0.2s, background 0.2s, transform 0.16s;
+            position: relative;
+            outline: none;
+        }
+
+        .glassy-cute-btn-inner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(29, 180, 205, 0.18) 0%, rgba(255, 255, 255, 0.35) 100%);
+        }
+
+        .glassy-cute-btn:hover,
+        .glassy-cute-btn:focus {
+            background: rgba(255, 255, 255, 0.44);
+            box-shadow: 0 4px 18px 0 rgba(30, 180, 205, 0.18), 0 2px 8px 0 rgba(80, 170, 255, 0.11);
+            transform: translateY(-2px) scale(1.06);
+        }
+
+        .cute-refresh-icon {
+            font-size: 1.45em;
+            color: #1db4cd;
+            filter: drop-shadow(0 0 2px #fff) drop-shadow(0 1px 2px #1db4cd33);
+            transition: color 0.2s, filter 0.2s;
+        }
+
+        .glassy-cute-btn:hover .cute-refresh-icon {
+            color: #16a085;
+            filter: drop-shadow(0 0 4px #fff) drop-shadow(0 2px 4px #1db4cd44);
+        }
+
+
+        .btn {
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            border: none;
+            color: #ffffff;
+        }
+
+
+
+        .btn-success {
+            background: #059669;
+            border: none;
+            color: #ffffff;
+        }
+
+        .btn-success:hover {
+            background: #047857;
+        }
+
+        .btn-warning {
+            background: #f59e0b;
+            border: none;
+            color: #ffffff;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+            border: none;
+            color: #ffffff;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        /* Modernized set & sequence tabs */
+        .nav-tabs {
+            border-bottom: none;
+            margin-bottom: 0;
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            padding: 0 8px;
+            background: #f7fafc;
+            border-radius: 12px 12px 0 0;
+            box-shadow: 0 2px 8px rgba(30, 180, 205, 0.06);
+            gap: 4px;
+        }
+
+        .nav-tabs .nav-item {
+            position: relative;
+            margin-right: 0;
+            background: transparent;
+            border-radius: 10px 10px 0 0;
+            border: none;
+            display: flex;
+            align-items: center;
+            min-width: 120px;
+            max-width: 210px;
+            transition: box-shadow 0.2s, background 0.2s;
+        }
+
+        .nav-tabs .nav-link {
+            color: #5f6368;
+            font-weight: 600;
+            font-size: 15px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px 10px 0 0;
+            background: transparent;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex-grow: 1;
+            text-align: left;
+            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+            box-shadow: none;
+        }
+
+        .nav-tabs .nav-link.active {
+            background: #fff;
+            color: #1db4cd;
+            box-shadow: 0 4px 12px rgba(30, 180, 205, 0.08);
+            z-index: 2;
+            border-bottom: 2.5px solid #1db4cd;
+        }
+
+        .nav-tabs .nav-link:hover:not(.active) {
+            background: #e0f7fa;
+            color: #1db4cd;
+            box-shadow: 0 2px 8px rgba(30, 180, 205, 0.05);
+        }
+
+        @media (max-width: 768px) {
+            .nav-tabs .nav-link {
+                font-size: 13px;
+                padding: 10px 14px;
+            }
+
+            .nav-tabs .nav-item {
+                min-width: 90px;
+                max-width: 120px;
+            }
+        }
+
+        /* Delete button styling for sequence tab */
+        .delete-sequence-tab {
+            color: #5f6368 !important;
+            opacity: 0;
+            transition: opacity 0.2s;
+            padding: 4px;
+            margin-right: 4px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+        }
+
+        .delete-sequence-tab:hover {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        /* Delete button styling for set tab */
+        .delete-set-tab {
+            color: #e74c3c !important;
+            background: transparent;
+            opacity: 0;
+            transition: opacity 0.2s, background 0.2s, box-shadow 0.2s;
+            padding: 4px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            outline: none;
+            border: none;
+            box-shadow: none;
+        }
+
+        .delete-set-tab:focus {
+            outline: 2px solid #1db4cd !important;
+            box-shadow: 0 0 0 2px #90caf9 !important;
+        }
+
+        .delete-set-tab:hover {
+            background: rgba(231, 76, 60, 0.08);
+            color: #c0392b !important;
+            box-shadow: 0 2px 8px rgba(231, 76, 60, 0.08);
+        }
+
+        /* Show delete button on tab hover */
+        .nav-item:hover .delete-set-tab {
+            opacity: 1;
+        }
+
+
+        /* Add new tab button */
+        #add-sequence-btn {
+            margin-left: 4px;
+            background: transparent;
+            border: 1px dashed #d1d1d1;
+            border-radius: 8px 8px 0 0;
+            min-width: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        #add-sequence-btn:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        /* Tab content area */
+        .tab-content {
+            border: 1px solid #d1d1d1;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            background: white;
+            padding: 16px;
+        }
+
+        /* Active tab indicator */
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+        }
+
+        /* Scrollbar for tabs */
+        .nav-tabs::-webkit-scrollbar {
+            height: 4px;
+        }
+
+        .nav-tabs::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+
+        .stats-card {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+
+
+        .stats-card div {
+            flex: 1;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .stats-card span {
+            display: block;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .stats-card p {
+            margin: 0;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .modal-content {
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .modal-header {
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+
+        .modal-footer {
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .nav-tabs {
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 20px;
+        }
+
+        .nav-tabs .nav-link {
+            color: #6b7280;
+            font-weight: 500;
+            border: none;
+            border-radius: 0;
+            padding: 10px 20px;
+        }
+
+        .nav-tabs .nav-link.active {
+            background: transparent;
+        }
+
+        .nav-tabs .nav-link:hover {}
+
+        .alert-info {
+            background-color: #e0f2fe;
+            border-color: #bae6fd;
+            color: #075985;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 15px;
+            }
+
+            .card-body {
+                padding: 15px;
+            }
+
+            .stats-card div {
+                min-width: 100%;
+            }
+        }
+
+        .email-pair {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .email-pair:last-child {
+            border-bottom: none;
+        }
+
+        .email-pair .sender,
+        .email-pair .receiver {
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .email-pair .sender {
+            text-align: left;
+        }
+
+        .email-pair .receiver {
+            text-align: end;
+        }
+
+        .email-pair .arrow {
+            margin: 0 15px;
+            color: #6b7280;
+        }
+
+        .crazy-loader {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .loader-circle {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #1db4cd, #ff6b6b, #4cd137);
+            animation: crazySpin 1.2s ease-in-out infinite;
+        }
+
+        .loader-circle:nth-child(2) {
+            animation-delay: 0.3s;
+        }
+
+        .loader-circle:nth-child(3) {
+            animation-delay: 0.6s;
+        }
+
+        @keyframes crazySpin {
+            0% {
+                transform: rotate(0deg) scale(1);
+                opacity: 1;
+                filter: hue-rotate(0deg);
+            }
+
+            50% {
+                transform: rotate(180deg) scale(1.3);
+                opacity: 0.7;
+                filter: hue-rotate(180deg);
+            }
+
+            100% {
+                transform: rotate(360deg) scale(1);
+                opacity: 1;
+                filter: hue-rotate(360deg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .email-pair {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .email-pair .sender,
+            .email-pair .receiver {
+                text-align: left;
+            }
+
+            .email-pair .arrow {
+                margin: 5px 0;
+            }
+        }
+    </style>
+@endsection
+
+@section('content')
+    <div class="container">
+        <div class="card">
+            <div class="card-header d-flex align-items-center justify-content-between flex-wrap gap-3 shadow-sm px-4 py-3"
+                style="background:#1db4cd; border-bottom:2px solid #e0e7ef;">
+                <span style="font-size:1.5rem; font-weight:700; color:#fff; letter-spacing:0.5px;">Drift Email
+                    Campaigns</span>
+                <div class="d-flex gap-2 flex-wrap">
+                    <button class="btn btn-primary btn-sm sharp-btn" id="save-all-sequences-btn"
+                        style="border-radius:6px; font-weight:600; letter-spacing:0.5px; box-shadow:0 1px 4px rgba(30,64,175,0.06); padding:8px 20px; background:#fff; color:#1db4cd; border:1.5px solid #fff;">Save
+                        All Sequences</button>
+                    <button class="btn btn-outline-primary btn-sm sharp-btn" id="new-set-btn"
+                        style="border-radius:6px; font-weight:600; letter-spacing:0.5px; box-shadow:0 1px 4px rgba(30,64,175,0.06); padding:8px 20px; background:#fff; color:#1db4cd; border:1.5px solid #fff;">New
+                        Set</button>
+                </div>
+            </div>
+            <style>
+                .sharp-btn:focus,
+                .sharp-btn:active {
+                    outline: none !important;
+                    box-shadow: 0 0 0 2px #90caf9 !important;
+                }
+
+                .sharp-btn {
+                    transition: background 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+                }
+
+                .btn-primary.sharp-btn:hover,
+                .btn-primary.sharp-btn:focus,
+                .btn-outline-primary.sharp-btn:hover,
+                .btn-outline-primary.sharp-btn:focus {
+                    background: #1db4cd !important;
+                    color: #fff !important;
+                    border-color: #1db4cd !important;
+                }
+
+                #new-set-btn:disabled,
+                .sharp-btn:disabled {
+                    color: #fff !important;
+                    background: #1db4cd !important;
+                    border-color: #1db4cd !important;
+                }
+            </style>
+            <div class="card-body">
+                <ul class="nav nav-tabs" id="setTabs" role="tablist">
+                    <!-- Dynamically populated by JavaScript -->
+                </ul>
+                <div class="tab-content" id="setTabContent">
+                    <div class="tab-pane fade show active" id="set-content-active" role="tabpanel"
+                        aria-labelledby="set-tab-active">
+                        <h5>Active Set: <span id="active-set-name">Loading...</span> (ID: <span id="active-set-id"></span>)
+                        </h5>
+                        <ul class="nav nav-tabs" id="sequenceTabs" role="tablist">
+                            <!-- Dynamically populated by JavaScript -->
+                        </ul>
+                        <div class="tab-content" id="sequenceTabContent">
+                            <!-- Dynamically populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Schedule Modal -->
+        <div class="modal fade" id="scheduleModal" tabindex="-1" aria-labelledby="scheduleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="scheduleModalLabel">Schedule Sequence</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form id="schedule-form">
+                        <div class="modal-body">
+                            <input type="hidden" id="schedule-sequence-id" name="sequence_id">
+                            <div class="mb-3">
+                                <label for="schedule-time" class="form-label">Schedule Time</label>
+                                <input type="datetime-local" class="form-control" id="schedule-time" name="scheduled_at"
+                                    required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="schedule-timezone" class="form-label">Timezone</label>
+                                <select class="form-select" id="schedule-timezone" name="timezone" required>
+                                    <!-- Timezone options will be populated dynamically -->
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">
+                                <span class="spinner-border spinner-border-sm loading-spinner d-none" role="status"
+                                    aria-hidden="true"></span>
+                                Schedule
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Replied Emails Modal -->
+        <div class="modal fade" id="repliedEmailsModal" tabindex="-1" aria-labelledby="repliedEmailsModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="repliedEmailsModalLabel">Replied Emails</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="replied-emails-loading" class="text-center" style="display: none;">
+                            <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                            Loading...
+                        </div>
+                        <div id="replied-emails-content"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Audience Modal -->
+        <div class="modal fade" id="createAudienceModal" tabindex="-1" aria-labelledby="createAudienceModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="createAudienceModalLabel">Create Audience</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <ul class="nav nav-tabs sub-tabs" id="createAudienceTabs" role="tablist">
+                            <li class="nav-item">
+                                <button class="nav-link active" id="manual-add-audience-tab" data-bs-toggle="tab"
+                                    data-bs-target="#manual-add-audience" type="button" role="tab"
+                                    aria-controls="manual-add-audience" aria-selected="true"><i
+                                        class="bi bi-person-plus"></i> Manually Add</button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="nav-link" id="import-csv-audience-tab" data-bs-toggle="tab"
+                                    data-bs-target="#import-csv-audience" type="button" role="tab"
+                                    aria-controls="import-csv-audience" aria-selected="false"><i
+                                        class="bi bi-file-earmark-arrow-up"></i> Import CSV</button>
+                            </li>
+                        </ul>
+                        <div class="tab-content" id="createAudienceTabContent">
+                            <div class="tab-pane fade show active" id="manual-add-audience" role="tabpanel"
+                                aria-labelledby="manual-add-audience-tab">
+                                <div class="mb-3">
+                                    <label for="audience-name-create" class="form-label">Audience Name</label>
+                                    <input type="text" class="form-control" id="audience-name-create" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="subscriber-format-create" class="form-label">Select Format</label>
+                                    <select class="form-control" id="subscriber-format-create">
+                                        <option value="first-email">First Name, Email</option>
+                                        <option value="first-last-email">First Name, Last Name, Email</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="subscribers-input-create" class="form-label">Enter Subscribers (one per
+                                        line, comma-separated)</label>
+                                    <textarea class="form-control" id="subscribers-input-create" rows="5"
+                                        placeholder="e.g., John, john@example.com\nJane, jane@example.com"></textarea>
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <button class="btn btn-success" id="save-audience-from-campaign-btn">
+                                        Save Audience
+                                        <span class="spinner-border spinner-border-sm loading-spinner" role="status"
+                                            aria-hidden="true" style="display: none;"></span>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="import-csv-audience" role="tabpanel"
+                                aria-labelledby="import-csv-audience-tab">
+                                <div class="mb-3">
+                                    <label for="audience-name-csv-create" class="form-label">Audience Name</label>
+                                    <input type="text" class="form-control" id="audience-name-csv-create" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="csv-format-create" class="form-label">Select CSV Format</label>
+                                    <select class="form-control" id="csv-format-create">
+                                        <option value="first-email">First Name, Email</option>
+                                        <option value="first-last-email">First Name, Last Name, Email</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="csv-file-create" class="form-label">Upload CSV File</label>
+                                    <input type="file" class="form-control" id="csv-file-create" accept=".csv">
+                                </div>
+                                <div class="d-flex align-items-center">
+                                    <button class="btn btn-success" id="import-csv-from-campaign-btn">
+                                        Save Audience
+                                        <span class="spinner-border spinner-border-sm loading-spinner" role="status"
+                                            aria-hidden="true" style="display: none;"></span>
+                                    </button>
+                                </div>
+                                <div class="progress mt-3" id="upload-progress-create" style="display: none;">
+                                    <div class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0"
+                                        aria-valuemin="0" aria-valuemax="100">0%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Editor Modal (TinyMCE version from email-scheduling) -->
+        <div class="modal fade" id="editorModal" tabindex="-1" aria-labelledby="editorModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editorModalLabel">Add Template</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="template-id">
+                        <div class="mb-3">
+                            <label for="editor-title" class="form-label">Template Title</label>
+                            <input type="text" class="form-control" id="editor-title">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editor-switch" class="form-label">Editor Type</label>
+                            <select class="form-control" id="editor-switch">
+                                <option value="wysiwyg">WYSIWYG Editor</option>
+                                <option value="code">Advanced Code Editor (HTML)</option>
+                            </select>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Subscriber Placeholders</label>
+                                <select class="form-control" id="subscriber-placeholder-select">
+                                    <option value="">Select Subscriber Placeholder</option>
+                                </select>
+                                <small class="form-text text-muted">Use placeholders like [first_name], [last_name] to
+                                    personalize for subscribers.</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Sender Placeholders</label>
+                                <select class="form-control" id="email-account-placeholder-select">
+                                    <option value="">Select Email Account Placeholder</option>
+                                </select>
+                                <small class="form-text text-muted">Use placeholders like [account_email],
+                                    [account_first_name] for account details.</small>
+                            </div>
+                        </div>
+                        <div id="tinymce-editor-container" style="display: none;">
+                            <textarea id="tinymce-editor" class="form-control" style="min-height: 200px;"></textarea>
+                        </div>
+                        <div id="code-editor-container" style="display: none;">
+                            <textarea id="code-editor" class="form-control" rows="10"></textarea>
+                        </div>
+                        <!-- TinyMCE Loading Spinner -->
+                        <div id="tinymce-loading" class="text-center py-4" style="display: none;">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Loading Editor...</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="save-template-btn">Save</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- New Set Modal -->
+        <div class="modal fade" id="newSetModal" tabindex="-1" aria-labelledby="newSetModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="newSetModalLabel">Create New Set</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="new-set-form">
+                            @csrf
+                            <div class="mb-3">
+                                <label for="set-name" class="form-label">Set Name</label>
+                                <input type="text" class="form-control" id="set-name" name="set_name" required
+                                    placeholder="Enter set name">
+                            </div>
+                            <div class="mb-3">
+                                <label for="sequence-count" class="form-label">Number of Sequences</label>
+                                <input type="number" class="form-control" id="sequence-count" name="sequence_count"
+                                    min="1" value="1" required>
+                            </div>
+                            <div id="set-message"></div>
+                            <button type="submit" class="btn btn-primary">
+                                Create Set
+                                <span class="spinner-border spinner-border-sm loading-spinner" role="status"
+                                    aria-hidden="true" style="display: none;"></span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Preview Email Modal -->
+        <div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-xl">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="previewModalLabel">Email Preview</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="preview-content" class="border p-3" style="min-height: 300px;">
+                            <div class="text-center" id="preview-loading" style="display: none;">
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                Loading preview...
+                            </div>
+                            <div id="preview-content-inner"></div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Delete Sequence Confirmation Modal -->
+        <div class="modal fade" id="deleteSequenceModal" tabindex="-1" aria-labelledby="deleteSequenceModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteSequenceModalLabel">Confirm Delete Sequence</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to permanently delete this sequence? This action cannot be undone.</p>
+                        <input type="hidden" id="delete-sequence-id">
+                        <input type="hidden" id="delete-tab-index">
+                        <input type="hidden" id="delete-set-id">
+                        <div id="delete-sequence-message"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" id="confirm-delete-sequence-btn">
+                            Delete
+                            <span class="spinner-border spinner-border-sm loading-spinner" role="status"
+                                aria-hidden="true" style="display: none;"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="deleteSetModal" tabindex="-1" aria-labelledby="deleteSetModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="deleteSetModalLabel">Confirm Delete Set</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Are you sure you want to permanently delete this set and all its sequences? This action cannot be
+                            undone.</p>
+                        <input type="hidden" id="delete-set-id">
+                        <div id="delete-set-message"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger" id="confirm-delete-set-btn">
+                            Delete
+                            <span class="spinner-border spinner-border-sm loading-spinner" role="status"
+                                aria-hidden="true" style="display: none;"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection
+
+@section('bottom-script')
+    <!-- jQuery must be loaded first and only once -->
+    <!-- jQuery must be loaded first and only once -->
+    <!-- jQuery must be loaded first and only once -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Other dependencies -->
+    <!-- Bootstrap 5 JS Bundle (for modal support) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.1.2/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="{{ asset('js/tinymce/tinymce.min.js') }}"></script>
+    <script>
+        let tinymceEditor = null;
+
+        function initializeTinyMCEEditor(content = '') {
+            return new Promise((resolve, reject) => {
+                const $spinner = $('#tinymce-loading');
+                const $editorContainer = $('#tinymce-editor-container');
+                const $errorContainer = $('#editor-error');
+
+                $spinner.show();
+                $editorContainer.hide();
+                $errorContainer.hide().empty();
+
+                // Ensure TinyMCE script is loaded
+                if (!window.tinymce) {
+                    console.error('TinyMCE is not loaded.');
+                    $spinner.hide();
+                    $errorContainer.text('Editor failed to load. Please try again.').show();
+                    reject(new Error('TinyMCE not loaded'));
+                    return;
+                }
+
+                // Remove any existing TinyMCE instance to prevent conflicts
+                if (tinymceEditor) {
+                    tinymce.remove('#tinymce-editor');
+                    tinymceEditor = null;
+                }
+
+                // Attempt to initialize TinyMCE
+                const attemptInit = (retryCount = 0, maxRetries = 2) => {
+                    try {
+                        tinymce.init({
+                            selector: '#tinymce-editor',
+                            plugins: 'advlist autolink lists link image charmap preview anchor searchreplace visualblocks code fullscreen insertdatetime media table paste help wordcount',
+                            toolbar: 'undo redo | formatselect | bold italic underline forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | table | customlink | code',
+                            menubar: 'file edit view insert format tools table help',
+                            height: 400,
+                            license_key: 'gpl',
+                            paste_data_images: true,
+                            paste_webkit_styles: 'all',
+                            paste_merge_formats: true,
+                            // Add options to remove branding and promotions
+                            branding: false, // Removes "Built with TinyMCE" branding
+                            promotion: false, // Disables promotional dialogs like "Get all features"
+                            content_style: `body { font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px; } table { border-collapse: collapse; width: 100%; } table, th, td { border: 1px solid #ccc; padding: 8px; } th { background-color: #f4f4f4; }`,
+                            setup: function(editor) {
+                                tinymceEditor = editor;
+                                editor.on('init', function() {
+                                    editor.setContent(content || '');
+                                    $spinner.hide();
+                                    $editorContainer.show();
+                                    resolve();
+                                });
+                                editor.ui.registry.addButton('customlink', {
+                                    icon: 'link',
+                                    tooltip: 'Insert smart link',
+                                    onAction: function() {
+                                        convertSelectedTextToLink(editor);
+                                    }
+                                });
+                                editor.addShortcut('ctrl+k', 'Insert smart link', function() {
+                                    convertSelectedTextToLink(editor);
+                                });
+                                editor.on('click', function(e) {
+                                    const target = e.target;
+                                    if (target.tagName === 'A') {
+                                        e.preventDefault();
+                                        let href = target.getAttribute('href');
+                                        const text = target.textContent.trim();
+                                        if (!href.startsWith('http')) {
+                                            href = text.match(/\.[a-z]{2,}$/) ?
+                                                'https://' + text :
+                                                `https://www.google.com/search?q=${encodeURIComponent(text)}`;
+                                        }
+                                        window.open(href, '_blank');
+                                    }
+                                });
+                            },
+                            init_instance_callback: function(editor) {
+                                editor.focus();
+                            },
+                            init_error_callback: function(error) {
+                                console.error('TinyMCE initialization failed:', error);
+                                if (retryCount < maxRetries) {
+                                    console.log(
+                                        `Retrying TinyMCE initialization (attempt ${retryCount + 1})`
+                                    );
+                                    setTimeout(() => attemptInit(retryCount + 1), 500);
+                                } else {
+                                    $spinner.hide();
+                                    $errorContainer.text(
+                                        'Failed to initialize editor after retries. Please try again.'
+                                    ).show();
+                                    reject(error);
+                                }
+                            }
+                        });
+                    } catch (error) {
+                        console.error('TinyMCE initialization error:', error);
+                        if (retryCount < maxRetries) {
+                            console.log(`Retrying TinyMCE initialization (attempt ${retryCount + 1})`);
+                            setTimeout(() => attemptInit(retryCount + 1), 500);
+                        } else {
+                            $spinner.hide();
+                            $errorContainer.text('Failed to initialize editor after retries. Please try again.')
+                                .show();
+                            reject(error);
+                        }
+                    }
+                };
+
+                attemptInit();
+            });
+        }
+
+        function convertSelectedTextToLink(editor) {
+            const selectedText = editor.selection.getContent({
+                format: 'text'
+            }).trim();
+            if (!selectedText) {
+                alert('Please select text to convert to a link.');
+                return;
+            }
+            let href = selectedText.match(/\.[a-z]{2,}$/) ?
+                `https://${selectedText}` :
+                `https://www.google.com/search?q=${encodeURIComponent(selectedText)}`;
+            const linkHtml = `<a href="${href}" target="_blank">${selectedText}</a>`;
+            editor.selection.setContent(linkHtml);
+        }
+
+        function fetchPlaceholders() {
+            $.ajax({
+                    url: '/api/email-account-placeholders',
+                    method: 'GET',
+                    timeout: 10000,
+                })
+                .done(data => {
+                    const subscriberPlaceholders = data.subscriber_placeholders || [];
+                    const emailAccountPlaceholders = data.email_account_placeholders || [];
+                    renderPlaceholders(subscriberPlaceholders, emailAccountPlaceholders);
+                })
+                .fail(() => {
+                    // fallback
+                    const subscriberPlaceholders = [{
+                            value: '[first_name]',
+                            text: 'Subscriber First Name'
+                        },
+                        {
+                            value: '[last_name]',
+                            text: 'Subscriber Last Name'
+                        },
+                        {
+                            value: '[email]',
+                            text: 'Subscriber Email'
+                        },
+                        {
+                            value: '[unsubscribe_link]',
+                            text: 'Unsubscribe Link'
+                        }
+                    ];
+                    const emailAccountPlaceholders = [{
+                            value: '[account_email]',
+                            text: 'Account Email'
+                        },
+                        {
+                            value: '[account_first_name]',
+                            text: 'Account First Name'
+                        },
+                        {
+                            value: '[account_last_name]',
+                            text: 'Account Last Name'
+                        }
+                    ];
+                    renderPlaceholders(subscriberPlaceholders, emailAccountPlaceholders);
+                });
+        }
+
+        function renderPlaceholders(subscriberPlaceholders, emailAccountPlaceholders) {
+            const $subscriberSelect = $('#subscriber-placeholder-select');
+            const $emailAccountSelect = $('#email-account-placeholder-select');
+            $subscriberSelect.empty().append('<option value="">Select Subscriber Placeholder</option>');
+            subscriberPlaceholders.forEach(ph => {
+                $subscriberSelect.append(`<option value="${ph.value}" data-type="subscriber">${ph.text}</option>`);
+            });
+            $emailAccountSelect.empty().append('<option value="">Select Email Account Placeholder</option>');
+            emailAccountPlaceholders.forEach(ph => {
+                $emailAccountSelect.append(
+                    `<option value="${ph.value}" data-type="email_account">${ph.text}</option>`);
+            });
+        }
+        $('#subscriber-placeholder-select').on('change', function() {
+            const value = $(this).val();
+            if (value) {
+                insertPlaceholder(value, 'subscriber');
+                $(this).val('');
+            }
+        });
+        $('#email-account-placeholder-select').on('change', function() {
+            const value = $(this).val();
+            if (value) {
+                insertPlaceholder(value, 'email_account');
+                $(this).val('');
+            }
+        });
+
+        function insertPlaceholder(value, type) {
+            if (tinymceEditor && $('#editor-switch').val() === 'wysiwyg') {
+                tinymceEditor.insertContent(value);
+            } else {
+                const $codeEditor = $('#code-editor');
+                if ($codeEditor.length) {
+                    const currentContent = $codeEditor.val();
+                    $codeEditor.val(currentContent + value);
+                }
+            }
+        }
+
+        function showEditorModal(modalTitle, title, editorType, content = '', id = null, onHiddenCallback = null) {
+            const $modal = $('#editorModal');
+            const $spinner = $('#tinymce-loading');
+            const $editorContainer = $('#tinymce-editor-container');
+            const $codeEditorContainer = $('#code-editor-container');
+            const $errorContainer = $('#editor-error');
+
+            // Reset modal state
+            $('#editorModalLabel').text(modalTitle || 'Create Template');
+            $('#editor-title').val(title || '').prop('disabled', false).prop('readonly', false);
+            $('#template-id').val(id || '');
+            $('#editor-switch').val(editorType || 'wysiwyg');
+            $editorContainer.hide();
+            $codeEditorContainer.hide();
+            $errorContainer.hide().empty();
+            $spinner.show();
+            fetchPlaceholders();
+
+            // Destroy existing TinyMCE instance
+            if (tinymceEditor) {
+                tinymce.remove('#tinymce-editor');
+                tinymceEditor = null;
+            }
+
+            // Initialize editor based on type
+            const initializeEditor = () => {
+                if ((editorType || 'wysiwyg') === 'wysiwyg') {
+                    initializeTinyMCEEditor(content)
+                        .then(() => {
+                            $editorContainer.show();
+                            $spinner.hide();
+                            $modal.modal('show').on('shown.bs.modal', function() {
+                                $('#editor-title').focus();
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Failed to initialize TinyMCE:', error);
+                            $spinner.hide();
+                            $editorContainer.hide();
+                            $errorContainer.text('Failed to load editor. Please try again.').show();
+                            $modal.modal('show');
+                        });
+                } else {
+                    $codeEditorContainer.show();
+                    $('#code-editor').val(content || '');
+                    $spinner.hide();
+                    $modal.modal('show').on('shown.bs.modal', function() {
+                        $('#editor-title').focus();
+                    });
+                }
+            };
+
+            // Handle modal hide callback
+            $modal.off('hidden.bs.modal');
+            if (onHiddenCallback) {
+                $modal.on('hidden.bs.modal', onHiddenCallback);
+            }
+
+            // Initialize editor directly (no unnecessary hide/show cycle)
+            initializeEditor();
+        }
+
+        // Handle create/add template buttons
+        $(document).on('click', '#create-template-btn, #add-template-btn, .create-template', function() {
+            showEditorModal('Create Template', '', 'wysiwyg');
+        });
+
+        // Handle editor type switch
+        $('#editor-switch').on('change', function() {
+            const type = $(this).val();
+            const title = $('#editor-title').val();
+            const id = $('#template-id').val();
+            let content = '';
+
+            // Get current content
+            if (type === 'wysiwyg' && tinymceEditor) {
+                content = tinymceEditor.getContent();
+            } else {
+                content = $('#code-editor').val();
+            }
+
+            const $spinner = $('#tinymce-loading');
+            const $editorContainer = $('#tinymce-editor-container');
+            const $codeEditorContainer = $('#code-editor-container');
+            const $errorContainer = $('#editor-error');
+
+            // Reset editor area
+            $editorContainer.hide();
+            $codeEditorContainer.hide();
+            $errorContainer.hide().empty();
+            $spinner.show();
+
+            // Destroy existing TinyMCE instance
+            if (tinymceEditor) {
+                tinymce.remove('#tinymce-editor');
+                tinymceEditor = null;
+            }
+
+            // Initialize new editor
+            if (type === 'wysiwyg') {
+                initializeTinyMCEEditor(content)
+                    .then(() => {
+                        $editorContainer.show();
+                        $spinner.hide();
+                    })
+                    .catch(error => {
+                        console.error('Failed to initialize TinyMCE:', error);
+                        $spinner.hide();
+                        $editorContainer.hide();
+                        $errorContainer.text('Failed to load editor. Please try again.').show();
+                    });
+            } else {
+                $codeEditorContainer.show();
+                $('#code-editor').val(content || '');
+                $spinner.hide();
+            }
+        });
+        let pendingSendImmediately = null;
+        $(document).ready(function() {
+            let sequenceCount = 0;
+            let quill = null;
+            let activeSetId = null;
+            let activeSetName = '';
+            let sequenceIdsMap = {}; // { [setId]: { [tabIndex]: sequenceId } }
+
+            // --- Form validation function ---
+            function validateForm(sequence, tabIndex, setId) {
+                const $form = $(`#sequence-${setId}-${tabIndex}-form`);
+                let isValid = true;
+                $form.find('[required]').each(function() {
+                    if ($(this).prop('disabled')) return;
+                    if (!$(this).val()) {
+                        $(this).addClass('is-invalid');
+                        isValid = false;
+                    } else {
+                        $(this).removeClass('is-invalid');
+                    }
+                });
+
+                // Validate time_gap and batch_size only for the first sequence (tabIndex == 1)
+                if (tabIndex == 1) {
+                    const timeGap = parseInt($form.find(`#sequence-time-gap-${setId}-${tabIndex}`).val()) || 0;
+                    const batchSize = parseInt($form.find(`#sequence-batch-size-${setId}-${tabIndex}`).val()) || 0;
+                    if (timeGap <= 0) {
+                        $form.find(`#sequence-time-gap-${setId}-${tabIndex}`).addClass('is-invalid');
+                        isValid = false;
+                    }
+                    if (batchSize <= 0) {
+                        $form.find(`#sequence-batch-size-${setId}-${tabIndex}`).addClass('is-invalid');
+                        isValid = false;
+                    }
+                }
+
+                if (!isValid) {
+                    alert('Please fill all required fields' + (tabIndex == 1 ?
+                            ', including a valid Time Gap (> 0 seconds) and Batch Size (> 0)' : '') +
+                        ' for Sequence ' + tabIndex);
+                }
+                return isValid;
+            }
+            // Setup Axios headers
+            axios.defaults.headers.common['X-CSRF-TOKEN'] = $('meta[name="csrf-token"]').attr('content');
+
+            // Initialize Select2 for multi-select fields
+            function initializeSelect2(selector) {
+                const $select = $(selector);
+                if ($select.hasClass('select2-hidden-accessible')) {
+                    $select.select2('destroy');
+                }
+                $select.select2({
+                    placeholder: "Select options",
+                    allowClear: true,
+                    dropdownAutoWidth: false,
+                    width: '100%',
+                    dropdownParent: $select.parent(),
+                    minimumResultsForSearch: 1 // Show search box even for a single option
+                });
+
+                const selected = $select.data('selected');
+                if (selected && Array.isArray(selected)) {
+                    $select.val(selected).trigger('change.select2');
+                    console.log('Initialized Select2 for', $select.attr('id'), 'with selected:', selected);
+                }
+            }
+
+            // Initialize Quill Editor
+            // Populate sequence form with saved data
+            function populateSequenceForm(setId, tabIndex, seq) {
+                const formId = `#sequence-${setId}-${tabIndex}-form`;
+                $(formId).find(`#sequence-name-${setId}-${tabIndex}`).val(seq.name);
+                $(formId).find(`#sequence-subject-${setId}-${tabIndex}`).val(seq.subject);
+                const $templateSelect = $(formId).find(`#sequence-template-${setId}-${tabIndex}`);
+                console.log('Setting template selected for', $templateSelect.attr('id'), seq.template_id);
+                $templateSelect.data('selected', seq.template_id || '');
+                if (tabIndex === 1) {
+                    const $audienceSelect = $(formId).find(`#sequence-audience-${setId}-${tabIndex}`);
+                    console.log('Setting audience selected for', $audienceSelect.attr('id'), seq.audience_id);
+                    $audienceSelect.data('selected', seq.audience_id || '');
+                }
+
+                let fromEmails = [];
+                if (seq.from_emails) {
+                    try {
+                        fromEmails = Array.isArray(seq.from_emails) ? seq.from_emails : JSON.parse(seq.from_emails);
+                    } catch (e) {
+                        fromEmails = [seq.from_emails];
+                    }
+                }
+                const $fromEmailSelect = $(formId).find(`#sequence-from-email-${setId}-${tabIndex}`);
+                console.log('Setting fromEmails selected for', $fromEmailSelect.attr('id'), fromEmails);
+                $fromEmailSelect.data('selected', fromEmails);
+
+                $(formId).find(`#sequence-time-gap-${setId}-${tabIndex}`).val(seq.time_gap);
+                $(formId).find(`#sequence-batch-size-${setId}-${tabIndex}`).val(seq.batch_size);
+                $(formId).find(`#sequence-wait-time-${setId}-${tabIndex}`).val(seq.wait_time);
+                $(formId).find(`#sequence-wait-unit-${setId}-${tabIndex}`).val(seq.wait_unit);
+
+                let filters = [];
+                if (seq.filters) {
+                    try {
+                        filters = Array.isArray(seq.filters) ? seq.filters : JSON.parse(seq.filters);
+                    } catch (e) {
+                        filters = [seq.filters];
+                    }
+                } else if (seq.categories) {
+                    try {
+                        filters = Array.isArray(seq.categories) ? seq.categories : JSON.parse(seq.categories);
+                    } catch (e) {
+                        filters = [seq.categories];
+                    }
+                }
+                if (tabIndex > 1) {
+                    const $filtersSelect = $(formId).find(`#sequence-report-filters-${setId}-${tabIndex}`);
+                    console.log('Setting filters selected for', $filtersSelect.attr('id'), filters);
+                    $filtersSelect.data('selected', filters);
+                }
+            }
+
+            // Update wait time fields' enabled/disabled state
+            function updateWaitTimeFields(setId) {
+                const $tabs = $(`#sequenceTabs-${setId} li.nav-item`).not(`#add-sequence-btn-${setId}`);
+                $tabs.each(function(index) {
+                    const tabIndex = index + 1;
+                    const isLast = index === $tabs.length - 1;
+                    const $waitTime = $(`#sequence-wait-time-${setId}-${tabIndex}`);
+                    const $waitUnit = $(`#sequence-wait-unit-${setId}-${tabIndex}`);
+                    $waitTime.prop('disabled', isLast);
+                    $waitUnit.prop('disabled', isLast);
+                    if (isLast) {
+                        $waitTime.val(0);
+                        $waitTime.removeAttr('required');
+                    } else {
+                        $waitTime.attr('required', 'required');
+                    }
+                });
+            }
+
+            // Create sequence tab
+            function createSequenceTab(tabIndex, sequenceId, sequenceName = `Sequence ${tabIndex}`, setId,
+                sequenceTabsId = 'sequenceTabs', sequenceTabContentId = 'sequenceTabContent') {
+
+                if (!sequenceIdsMap[setId]) sequenceIdsMap[setId] = {};
+                sequenceIdsMap[setId][tabIndex] = String(sequenceId);
+                const seqId = String(sequenceId);
+                const isActive = tabIndex === 1 ? 'active' : '';
+                const isShowActive = tabIndex === 1 ? 'show active' : '';
+
+                // Remove all existing delete buttons
+                // $(`#${sequenceTabsId} .delete-sequence-tab`).remove();
+
+                // No delete button
+                const newSequenceTab = `
+        <li class="nav-item">
+            <button class="nav-link ${isActive}" id="sequence-tab-${setId}-${tabIndex}" data-bs-toggle="tab"
+                data-bs-target="#sequence-${setId}-${tabIndex}" type="button" role="tab"
+                aria-controls="sequence-${setId}-${tabIndex}" aria-selected="${tabIndex === 1}">
+                Sequence ${tabIndex}
+            </button>
+        </li>
+    `;
+
+                const newSequenceContent = `
+        <div class="tab-pane fade drift-sequence-box ${isShowActive}" id="sequence-${setId}-${tabIndex}" 
+            role="tabpanel" aria-labelledby="sequence-tab-${setId}-${tabIndex}" data-sequence="${seqId}" data-set="${setId}">
+            <div class="card">
+                <div class="card-header">
+                    Sequence ${tabIndex}
+                    <div>
+                        <button class="btn btn-danger btn-sm cancel-sequence ms-2" data-sequence="${seqId}" disabled>
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form id="sequence-${setId}-${tabIndex}-form">
+                        @csrf
+                        <input type="hidden" name="set_id" value="${setId}">
+                        <input type="hidden" name="sequence_id" value="${seqId}">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="sequence-name-${setId}-${tabIndex}" class="form-label">Sequence Name</label>
+                                <input type="text" class="form-control" id="sequence-name-${setId}-${tabIndex}" 
+                                    name="name" placeholder="Enter sequence name" value="${sequenceName}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="sequence-subject-${setId}-${tabIndex}" class="form-label">Subject</label>
+                                <input type="text" class="form-control" id="sequence-subject-${setId}-${tabIndex}" 
+                                    name="subject" maxlength="255" required placeholder="Enter email subject">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="sequence-template-${setId}-${tabIndex}" class="form-label">Select Template</label>
+                                <div class="input-group" style="flex-wrap:nowrap; align-items:center;">
+                                    <select class="form-control" id="sequence-template-${setId}-${tabIndex}"
+                                        name="template_id" required style="max-width:300px; min-width:120px; flex-shrink:1;">
+                                        <option value="">-- Select Template --</option>
+                                    </select>
+                                    <button type="button" class="btn btn-outline-primary create-template" style="border-radius:6px; margin-left:8px; white-space:nowrap;">
+                                        Create Template
+                                    </button>
+                                </div>
+                            </div>
+                            ${tabIndex === 1 ? `
+                                        <div class="col-md-6 d-flex align-items-center" style="gap:12px;">
+                                            <div style="width:100%;">
+                                                <label for="sequence-audience-${setId}-${tabIndex}" class="form-label">Select Audience</label>
+                                                <div class="d-flex align-items-center" style="gap:8px;">
+                                                    <select class="form-control" id="sequence-audience-${setId}-${tabIndex}"
+                                                        name="audience_id" required style="max-width:300px; min-width:120px; flex-shrink:1;">
+                                                        <option value="">-- Select Audience --</option>
+                                                    </select>
+                                                    <button type="button" class="btn btn-outline-primary create-audience" style="border-radius:6px; white-space:nowrap;">
+                                                        Create Audience
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="sequence-time-gap-${setId}-${tabIndex}" class="form-label">
+                                                Time Gap Between Batches (seconds)
+                                                <i class="bi bi-info-circle" data-bs-toggle="tooltip" title="Time gap applies only between batches, not between emails within a batch."></i>
+                                            </label>
+                                            <input type="number" class="form-control" id="sequence-time-gap-${setId}-${tabIndex}" 
+                                                name="time_gap" min="1" value="5" required>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="sequence-batch-size-${setId}-${tabIndex}" class="form-label">Batch Size (emails per account)</label>
+                                            <input type="number" class="form-control" id="sequence-batch-size-${setId}-${tabIndex}"
+                                                name="batch_size" min="1" value="2" required>
+                                        </div>
+                                    ` : `
+                                        <div class="col-md-6">
+                                            <label for="sequence-report-filters-${setId}-${tabIndex}" class="form-label">Select Report Filters (Sequence ${tabIndex - 1})</label>
+                                            <select class="form-control dyna-select-dropdown" id="sequence-report-filters-${setId}-${tabIndex}"
+                                                name="filters[]" multiple>
+                                                <option value="__select_all__">-- Select All --</option>
+                                            </select>
+                                        </div>
+                                    `}
+                            <div class="col-md-6">
+                                <label for="sequence-from-email-${setId}-${tabIndex}" class="form-label">From Email</label>
+                                <select class="form-control dyna-select-dropdown" id="sequence-from-email-${setId}-${tabIndex}"
+                                    name="from_emails[]" multiple required>
+                                    <option value="__select_all__">-- Select All --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="sequence-wait-time-${setId}-${tabIndex}" class="form-label">Wait Time for Next Sequence</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="sequence-wait-time-${setId}-${tabIndex}"
+                                        name="wait_time" min="0" required>
+                                    <select class="form-select" id="sequence-wait-unit-${setId}-${tabIndex}" name="wait_unit">
+                                        <option value="minutes">Minutes</option>
+                                        <option value="hours">Hours</option>
+                                        <option value="days">Days</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="d-flex gap-2 flex-wrap">
+                                    ${tabIndex === 1 ? `
+                                                <button type="button" class="btn btn-primary send-immediately" data-sequence="${seqId}" style="pointer-events:auto;z-index:1000;">Send Immediately</button>
+                                                <button type="button" class="btn btn-primary schedule-sequence" 
+                                                    data-sequence="${seqId}">Schedule</button>
+                                            ` : ''}
+                                    <button type="button" class="btn btn-primary preview-email" 
+                                        data-sequence="${seqId}">Preview</button>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="previous_sequence_id" value="${tabIndex === 1 ? '' : seqId}">
+                    </form>
+                </div>
+                <!-- Reports Section with Loader -->
+                <div class="reports-section mt-3" id="reports-${seqId}" style="display: none;">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white d-flex align-items-center" style="font-size: 1.15rem; font-weight: bold;">
+                            <span class="d-inline-flex align-items-center">Sequence ${tabIndex} Reports<i class="bi bi-bar-chart-fill ms-2" style="font-size: 1.2em;"></i>
+                                <button type="button" class="refresh-reports-btn glassy-cute-btn ms-2" data-sequence="${seqId}" title="Refresh Reports" aria-label="Refresh Reports">
+                                    <span class="glassy-cute-btn-inner">
+                                        <i class="bi bi-arrow-clockwise cute-refresh-icon"></i>
+                                    </span>
+                                </button>
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <div id="reports-loading-${seqId}" class="text-center py-4" style="display: none;">
+                                <div class="crazy-loader">
+                                    <div class="loader-circle"></div>
+                                    <div class="loader-circle"></div>
+                                    <div class="loader-circle"></div>
+                                    <p class="text-muted mt-2">Fetching reports, hold tight!</p>
+                                </div>
+                            </div>
+                            <div id="reports-content-${seqId}" style="display: none;">
+                                <div class="d-flex flex-row flex-wrap justify-content-center align-items-stretch gap-3 stats-card mb-3" style="overflow-x:auto;">
+                                    <div class="report-category text-center flex-fill py-2 px-3 rounded shadow-sm bg-white border" style="min-width:120px;">
+                                        <span id="reports-sent-${seqId}" class="fw-bold fs-5 text-success">0</span>
+                                        <div class="small mt-1">Sent</div>
+                                    </div>
+                                    <div class="report-category text-center flex-fill py-2 px-3 rounded shadow-sm bg-white border" style="min-width:120px;">
+                                        <span id="reports-replied-${seqId}" class="fw-bold fs-5 text-primary">0</span>
+                                        <div class="small mt-1">Replied <i class="bi bi-eye-fill ms-2 view-replied-emails" data-sequence="${seqId}" style="cursor: pointer;" title="View Replied Emails"></i></div>
+                                    </div>
+                                </div>
+                                <div class="d-flex flex-row flex-wrap justify-content-center align-items-stretch gap-3 stats-card" style="overflow-x:auto;">
+                                    <div class="report-category text-center flex-fill py-2 px-3 rounded shadow-sm bg-white border" style="min-width:120px;">
+                                        <span id="reports-no_longer-${seqId}" class="fw-bold fs-5 text-secondary">0</span>
+                                        <div class="small mt-1">No Longer</div>
+                                    </div>
+                                    <div class="report-category text-center flex-fill py-2 px-3 rounded shadow-sm bg-white border" style="min-width:120px;">
+                                        <span id="reports-automatic_reply-${seqId}" class="fw-bold fs-5 text-info">0</span>
+                                        <div class="small mt-1">Automatic Reply</div>
+                                    </div>
+                                    <div class="report-category text-center flex-fill py-2 px-3 rounded shadow-sm bg-white border" style="min-width:120px;">
+                                        <span id="reports-unsubscribed-${seqId}" class="fw-bold fs-5 text-warning">0</span>
+                                        <div class="small mt-1">Unsubscribed</div>
+                                    </div>
+                                    <div class="report-category text-center flex-fill py-2 px-3 rounded shadow-sm bg-white border" style="min-width:120px;">
+                                        <span id="reports-softbounce-${seqId}" class="fw-bold fs-5 text-danger">0</span>
+                                        <div class="small mt-1">Softbounce</div>
+                                    </div>
+                                    <div class="report-category text-center flex-fill py-2 px-3 rounded shadow-sm bg-white border" style="min-width:120px;">
+                                        <span id="reports-hardbounce-${seqId}" class="fw-bold fs-5 text-danger">0</span>
+                                        <div class="small mt-1">Hardbounce</div>
+                                    </div>
+                                    <div class="report-category text-center flex-fill py-2 px-3 rounded shadow-sm bg-white border" style="min-width:120px;">
+                                        <span id="reports-unopened-${seqId}" class="fw-bold fs-5 text-muted">0</span>
+                                        <div class="small mt-1">Unopened</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="reports-message-${seqId}" class="text-info mt-3" style="display: none;">
+                                This sequence has not been sent yet. No report data available.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
+                $(`#${sequenceTabsId}`).append(newSequenceTab);
+                $(`#${sequenceTabContentId}`).append(newSequenceContent);
+
+                $(`#add-sequence-btn-${setId}`).remove();
+
+                if (tabIndex === sequenceCount) {
+                    $(`#${sequenceTabsId}`).append(`
+            <li id="add-sequence-btn-${setId}" 
+                title="Add New Sequence" 
+                style="display: flex; align-items: center; justify-content: center; color: #1db4cd; width: 22px; height: 39px; border-radius: 50%; cursor: pointer;">
+                <i class="bi bi-plus " style="font-size: 30px;"></i>
+            </li>
+        `);
+                }
+
+                initializeSelect2(`#sequence-from-email-${setId}-${tabIndex}`);
+
+                if (tabIndex > 1) {
+                    fetchReportCategories(setId, tabIndex, seqId);
+                }
+
+                // Update wait time fields' enabled/disabled state
+                updateWaitTimeFields(setId);
+            }
+
+            // Save all sequences
+            $('#save-all-sequences-btn').click(function() {
+                // Mark all sequence forms as dirty before save
+                $(`#sequenceTabContent-${activeSetId} form`).attr('data-saved', 'false');
+                if (!activeSetId) {
+                    alert('No active set selected.');
+                    return;
+                }
+
+                const $sequenceForms = $(`#sequenceTabContent-${activeSetId} form`);
+                let allValid = true;
+                const sequences = [];
+
+                $sequenceForms.each(function(index) {
+                    const tabIndex = index + 1;
+                    const $form = $(this);
+                    const sequenceId = $form.find('input[name="sequence_id"]').val();
+
+                    if (!validateForm(null, tabIndex, activeSetId)) {
+                        allValid = false;
+                        return false;
+                    }
+
+                    const sequenceData = {
+                        sequence_id: sequenceId || null,
+                        set_id: activeSetId,
+                        name: $form.find(`#sequence-name-${activeSetId}-${tabIndex}`).val(),
+                        subject: $form.find(`#sequence-subject-${activeSetId}-${tabIndex}`)
+                            .val(),
+                        template_id: $form.find(`#sequence-template-${activeSetId}-${tabIndex}`)
+                            .val(),
+                        audience_id: tabIndex === 1 ? $form.find(
+                            `#sequence-audience-${activeSetId}-${tabIndex}`).val() : null,
+                        from_emails: $form.find(
+                            `#sequence-from-email-${activeSetId}-${tabIndex}`).val() || [],
+                        time_gap: tabIndex === 1 ? parseInt($form.find(
+                                `#sequence-time-gap-${activeSetId}-${tabIndex}`).val()) ||
+                            null : null,
+                        batch_size: tabIndex === 1 ? parseInt($form.find(
+                                `#sequence-batch-size-${activeSetId}-${tabIndex}`).val()) ||
+                            null : null,
+                        wait_time: parseInt($form.find(
+                            `#sequence-wait-time-${activeSetId}-${tabIndex}`).val()) || 0,
+                        wait_unit: $form.find(`#sequence-wait-unit-${activeSetId}-${tabIndex}`)
+                            .val() || 'minutes',
+                        categories: tabIndex > 1 ? ($form.find(
+                                `#sequence-report-filters-${activeSetId}-${tabIndex}`)
+                            .val() || []) : []
+                    };
+
+                    console.log(`Sequence ${tabIndex} data:`, sequenceData);
+                    sequences.push(sequenceData);
+                });
+
+                if (!allValid) return;
+
+                const $btn = $(this);
+                $btn.prop('disabled', true).append(
+                    '<span class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true"></span>'
+                );
+
+                axios.post('/drift/save-sequences', {
+                        sequences: sequences,
+                        set_id: activeSetId,
+                        _token: $('meta[name="csrf-token"]').attr('content')
+                    })
+                    .then(response => {
+                        alert('All sequences saved successfully!');
+                        // Mark all sequence forms as saved after save
+                        $(`#sequenceTabContent-${activeSetId} form`).attr('data-saved', 'true');
+                        $btn.prop('disabled', false).find('.spinner-border').remove();
+
+                        sequences.forEach((sequence, index) => {
+                            const tabIndex = index + 1;
+                            if (!sequence.sequence_id) {
+                                const newSequenceId = response.data.sequences?.[index]?.id ||
+                                    sequence.sequence_id;
+                                if (newSequenceId) {
+                                    sequenceIdsMap[activeSetId][tabIndex] = String(
+                                        newSequenceId);
+                                    $(`#sequence-${activeSetId}-${tabIndex}`).attr(
+                                        'data-sequence', newSequenceId);
+                                    $(`#sequence-${activeSetId}-${tabIndex}-form input[name="sequence_id"]`)
+                                        .val(newSequenceId);
+                                    $(`.delete-sequence-tab[data-tab-index="${tabIndex}"][data-set="${activeSetId}"]`)
+                                        .attr('data-sequence', newSequenceId);
+                                }
+                            }
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Failed to save sequences:', error);
+                        alert('Failed to save sequences: ' + (error.response?.data?.error ||
+                            'Unknown error'));
+                        $btn.prop('disabled', false).find('.spinner-border').remove();
+                    });
+            });
+
+            // Create set tab
+            function createSetTab(setId, setName, isActive = false) {
+                const isActiveClass = isActive ? 'active' : '';
+                const isShowActive = isActive ? 'show active' : '';
+                const setTab = `
+                    <li class="nav-item d-flex align-items-center">
+                        <button class="nav-link ${isActiveClass}" id="set-tab-${setId}" data-bs-toggle="tab"
+                            data-bs-target="#set-content-${setId}" type="button" role="tab"
+                            aria-controls="set-content-${setId}" aria-selected="${isActive}">
+                            ${setName}
+                        </button>
+                        <button class="btn btn-link delete-set-tab ms-1" data-set="${setId}" title="Delete Set" aria-label="Delete Set" tabindex="0">
+    <i class="bi bi-trash"></i>
+</button>
+                    </li>
+                `;
+                const setContent = `
+                    <div class="tab-pane fade ${isShowActive}" id="set-content-${setId}" role="tabpanel" aria-labelledby="set-tab-${setId}">
+                        <h5>Active Set: <span id="active-set-name-${setId}">${setName}</span></h5>
+                        <ul class="nav nav-tabs" id="sequenceTabs-${setId}" role="tablist">
+                            <!-- Dynamically populated by JavaScript -->
+                        </ul>
+                        <div class="tab-content" id="sequenceTabContent-${setId}">
+                            <!-- Dynamically populated by JavaScript -->
+                        </div>
+                    </div>
+                `;
+                $('#setTabs').append(setTab);
+                $('#setTabContent').append(setContent);
+            }
+
+            // Fetch sequences
+            function fetchSequences() {
+                console.log('Fetching sets from /api/drift/sets');
+                axios.get('/drift/sets')
+                    .then(response => {
+                        console.log('Sets response:', response.data);
+                        const sets = response.data.sets;
+                        $('#setTabs').empty();
+                        $('#setTabContent').empty();
+
+                        // Toggle New Set button based on whether sets exist
+                        if (sets.length === 0) {
+                            $('#new-set-btn').prop('disabled', false);
+                            $('#setTabContent').html(`
+                    <div class="alert alert-info">
+                        No sets found. Click "New Set" to create a new set.
+                    </div>
+                `);
+                            activeSetId = null;
+                            activeSetName = '';
+                            sequenceCount = 0;
+                            fetchInitialData();
+                            return;
+                        } else {
+                            $('#new-set-btn').prop('disabled', true); // Disable when sets exist
+                        }
+
+                        sets.forEach((set, index) => {
+                            createSetTab(set.id, set.set_name, index === 0);
+                            loadSequencesForSet(set.id, index === 0);
+                        });
+
+                        fetchInitialData();
+                    })
+                    .catch(error => {
+                        console.error('Failed to fetch sets:', error);
+                        $('#setTabs').empty();
+                        $('#setTabContent').html(`
+                <div class="alert alert-info">
+                    No sets found. Click "New Set" to create a new set.
+                </div>
+            `);
+                        $('#new-set-btn').prop('disabled', false); // Enable when fetch fails (no sets)
+                        activeSetId = null;
+                        activeSetName = '';
+                        sequenceCount = 0;
+                        fetchInitialData();
+                    });
+            }
+
+            // Ensure sequenceTabContentId is always defined
+            let sequenceTabContentId;
+
+            function loadSequencesForSet(setId, isActive = false) {
+                console.log('Fetching sequences for set:', setId);
+                axios.get(`/drift/sequences?set_id=${setId}`)
+                    .then(response => {
+                        console.log('Sequences response for set', setId, ':', response.data);
+                        const {
+                            sequences
+                        } = response.data;
+                        const sequenceTabsId = `sequenceTabs-${setId}`;
+                        const sequenceTabContentId = `sequenceTabContent-${setId}`;
+                        $(`#${sequenceTabsId}`).empty();
+                        $(`#${sequenceTabContentId}`).empty();
+                        let localSequenceCount = 0;
+
+                        if (sequences.length === 0) {
+                            $(`#${sequenceTabContentId}`).html(`
+                                <div class="alert alert-info">
+                                    No sequences found for this set. Add sequences using the interface above.
+                                </div>
+                            `);
+                        } else {
+                            sequences.forEach((seq, index) => {
+                                localSequenceCount = index + 1;
+                                createSequenceTab(localSequenceCount, String(seq.id), seq.name, setId,
+                                    sequenceTabsId, sequenceTabContentId);
+                                populateSequenceForm(setId, localSequenceCount, seq);
+                                if (['running', 'paused', 'scheduled'].includes(seq.status)) {
+                                    $(`.pause-sequence[data-sequence="${seq.id}"]`).prop('disabled',
+                                        false);
+                                    $(`.cancel-sequence[data-sequence="${seq.id}"]`).prop('disabled',
+                                        false);
+                                }
+                                fetchReports(String(seq.id));
+                            });
+                        }
+
+                        if (isActive) {
+                            activeSetId = setId;
+                            activeSetName = response.data.set_name || `Set ${setId}`;
+                            sequenceCount = localSequenceCount;
+                            $(`#active-set-name-${setId}`).text(activeSetName);
+                            $(`#active-set-id-${setId}`).text(setId);
+                        }
+
+                        $(`#${sequenceTabsId}`).append(`
+                            <li id="add-sequence-btn-${setId}" 
+                                title="Add New Sequence" 
+                                style="display: flex; align-items: center; justify-content: center; color: #1db4cd; width: 22px; height: 39px; border-radius: 50%; cursor: pointer;">
+                                <i class="bi bi-plus" style="font-size: 30px;"></i>
+                            </li>
+                        `);
+
+                        fetchInitialData();
+                        updateWaitTimeFields(
+                            setId); // Ensure wait time fields are correctly set after loading sequences
+                    })
+                    .catch(error => {
+                        console.error('Failed to fetch sequences for set:', setId, error);
+                        $(`#${sequenceTabContentId}`).html(`
+                            <div class="alert alert-info">
+                                No sequences found for this set.
+                            </div>
+                        `);
+                    });
+            }
+
+            // New set button handler
+            $('#new-set-btn').click(function() {
+                $('#set-name').val('');
+                $('#sequence-count').val('1');
+                $('#set-message').empty();
+                $('#newSetModal').modal('show');
+            });
+
+            // New set form submission
+            $('#new-set-form').submit(function(e) {
+                e.preventDefault();
+                const $btn = $(this).find('button[type="submit"]');
+                $btn.prop('disabled', true).find('.loading-spinner').show();
+
+                const formData = {
+                    set_name: $('#set-name').val(),
+                    sequence_count: parseInt($('#sequence-count').val()),
+                    _token: $('meta[name="csrf-token"]').attr('content')
+                };
+
+                axios.post('/drift/create-set-with-sequences', formData)
+                    .then(response => {
+                        console.log('Create set response:', response.data);
+                        $('#newSetModal').modal('hide');
+                        $('#set-message').html(
+                            '<div class="alert alert-success">Set created successfully!</div>'
+                        );
+
+                        $('#setTabs').empty();
+                        $('#setTabContent').empty();
+                        fetchSequences();
+
+                        setTimeout(() => {
+                            const setId = response.data.set?.id || activeSetId;
+                            if (setId && response.data.sequences?.length > 1) {
+                                response.data.sequences.forEach((seq, index) => {
+                                    const tabIndex = index + 1;
+                                    if (tabIndex > 1) {
+                                        fetchReportCategories(setId, tabIndex, seq.id);
+                                    }
+                                });
+                            }
+                        }, 1000);
+
+                        setTimeout(() => {
+                            $('#set-message').empty();
+                        }, 3000);
+                        $btn.prop('disabled', false).find('.loading-spinner').hide();
+                    })
+                    .catch(error => {
+                        console.error('Failed to create set:', error);
+                        let errorMessage = error.response?.data?.error || 'Unknown error';
+                        if (error.response?.status === 422) {
+                            errorMessage = error.response.data.error || 'Validation failed';
+                        }
+                        $('#set-message').html(
+                            `<div class="alert alert-danger">Failed to create set: ${errorMessage}</div>`
+                        );
+                        $btn.prop('disabled', false).find('.loading-spinner').hide();
+                        setTimeout(() => {
+                            $('#set-message').empty();
+                        }, 5000);
+                    });
+            });
+
+            // Fetch initial data
+            function fetchInitialData() {
+                // Fetch templates
+                axios.get('/drift/templates')
+                    .then(response => {
+                        const templates = response.data;
+                        $('[id^=sequence-template-]').each(function() {
+                            const $select = $(this);
+                            const currentValue = $select.val() || '';
+                            $select.empty().append('<option value="">-- Select Template --</option>');
+                            templates.forEach(template => {
+                                $select.append(
+                                    `<option value="${template.id}">${template.title || template.name || template.id}</option>`
+                                );
+                            });
+                            const selected = $select.data('selected');
+                            if (selected !== undefined && selected !== null && selected !== '') {
+                                $select.val(selected);
+                            } else {
+                                $select.val(currentValue);
+                            }
+                            console.log('Dropdown HTML for', $select.attr('id'), $select.html());
+                            console.log('Selected value for', $select.attr('id'), $select.val());
+                            if ($select.hasClass('select2-hidden-accessible')) {
+                                $select.select2('destroy');
+                            }
+                            $select.select2();
+                            $select.trigger('change.select2');
+                        });
+                        if (templates.length === 0) {
+                            console.warn('No templates found.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Failed to fetch templates:', error);
+                        alert('Failed to fetch templates: ' + (error.response?.data?.error || 'Unknown error'));
+                    });
+
+                // Fetch audiences
+                axios.get('/drift/audiences')
+                    .then(response => {
+                        const audiences = response.data;
+                        $('[id^=sequence-audience-]').each(function() {
+                            const $select = $(this);
+                            const currentValue = $select.val() || '';
+                            $select.empty().append('<option value="">-- Select Audience --</option>');
+                            audiences.forEach(audience => {
+                                $select.append(
+                                    `<option value="${audience.id}">${audience.name || audience.title || audience.id}</option>`
+                                );
+                            });
+                            const selected = $select.data('selected');
+                            if (selected !== undefined && selected !== null && selected !== '') {
+                                $select.val(selected);
+                            } else {
+                                $select.val(currentValue);
+                            }
+                            console.log('Dropdown HTML for', $select.attr('id'), $select.html());
+                            console.log('Selected value for', $select.attr('id'), $select.val());
+                            if ($select.hasClass('select2-hidden-accessible')) {
+                                $select.select2('destroy');
+                            }
+                            $select.select2();
+                            $select.trigger('change.select2');
+                        });
+                        if (audiences.length === 0) {
+                            console.warn('No audiences found.');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Failed to fetch audiences:', error);
+                        alert('Failed to fetch audiences: ' + (error.response?.data?.error || 'Unknown error'));
+                    });
+                axios.get('/drift/email-accounts')
+                    .then(response => {
+                        const accounts = response.data;
+                        $('[id^=sequence-from-email-]').each(function() {
+                            const $select = $(this);
+                            const currentValues = $select.val() || [];
+                            $select.empty().append(
+                                '<option value="__select_all__">Select All</option>');
+                            accounts.forEach(account => {
+                                if (account.status === 'active') {
+                                    $select.append(
+                                        `<option value="${account.email}">${account.email}</option>`
+                                    );
+                                }
+                            });
+                            const selected = $select.data('selected');
+                            if (selected && Array.isArray(selected)) {
+                                $select.val(selected).trigger('change.select2');
+                            } else {
+                                $select.val(currentValues).trigger('change');
+                            }
+                            initializeSelect2($select);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Failed to fetch email accounts:', error);
+                        alert('Failed to fetch email accounts: ' + (error.response?.data?.error ||
+                            'Unknown error'));
+                    });
+
+                axios.get('/drift/timezones')
+                    .then(response => {
+                        const timezones = response.data;
+                        $('#schedule-timezone').empty().append('<option value="">Select Timezone</option>');
+                        timezones.forEach(timezone => {
+                            $('#schedule-timezone').append(
+                                `<option value="${timezone}">${timezone}</option>`
+                            );
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Failed to fetch timezones:', error);
+                        alert('Failed to fetch timezones: ' + (error.response?.data?.error || 'Unknown error'));
+                    });
+
+                axios.get('/drift/subscribers')
+                    .then(response => {
+                        const subscribers = Array.isArray(response.data) ?
+                            response.data :
+                            (Array.isArray(response.data.subscribers) ? response.data.subscribers : []);
+                        $('#preview-subscriber').empty().append('<option value="">Select Subscriber</option>');
+                        subscribers.forEach(subscriber => {
+                            $('#preview-subscriber').append(
+                                `<option value="${subscriber.id}">${subscriber.first_name} ${subscriber.last_name || ''} (${subscriber.email})</option>`
+                            );
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Failed to fetch subscribers:', error);
+                    });
+            }
+
+            // Insert subscriber and sender placeholders
+            // Placeholder insertion now handled by TinyMCE logic
+            $('#save-template-btn').on('click', function() {
+                const templateId = $('#template-id').val();
+                const title = $('#editor-title').val();
+                let content;
+                const editorType = $('#editor-switch').val();
+
+                if (editorType === 'wysiwyg') {
+                    content = tinymceEditor ? tinymceEditor.getContent() : '';
+                } else {
+                    content = $('#code-editor').val().trim();
+                }
+
+                console.log('Cleaned template content before saving:', content); // Debug log
+
+                axios.post('/drift/templates', {
+                        id: templateId,
+                        title: title,
+                        content: content,
+                        _token: $('meta[name="csrf-token"]').attr('content')
+                    })
+                    .then(response => {
+                        console.log('Template saved successfully:', response.data);
+                        alert('Template saved successfully!');
+                        $('#editorModal').modal('hide');
+                    })
+                    .catch(error => {
+                        console.error('Error saving template:', error);
+                        alert('Failed to save template: ' + (error.response?.data?.details ||
+                            'Unknown error'));
+                    });
+            });
+            // Reset editor modal on hide
+            $('#editorModal').on('hidden.bs.modal', function() {
+                $('#editor-title').val('');
+                $('#template-id').val('');
+                $('#code-editor').val('');
+                $('#editor-switch').val('wysiwyg');
+                $('#tinymce-editor-container').show();
+                $('#code-editor-container').hide();
+            });
+
+            // Other existing functions (unchanged)
+            async function updatePreviewSubscribersFromPrevSequence(prevSequenceId, category, $dropdown) {
+                $dropdown.empty().append('<option value="">Loading...</option>');
+                try {
+                    const res = await axios.get('/drift/sequence-category-emails', {
+                        params: {
+                            prev_sequence_id: prevSequenceId,
+                            category: category
+                        }
+                    });
+                    $dropdown.empty();
+                    if ((res.data.subscribers || []).length === 0) {
+                        $dropdown.append('<option value="">No matching subscribers</option>');
+                    } else {
+                        $dropdown.append('<option value="">Select Subscriber</option>');
+                        (res.data.subscribers || []).forEach(sub => {
+                            $dropdown.append(
+                                `<option value="${sub.id}">${sub.name} (${sub.email})</option>`);
+                        });
+                    }
+                } catch (err) {
+                    $dropdown.empty().append('<option value="">Failed to load</option>');
+                    console.error('Failed to load category emails:', err);
+                }
+            }
+
+            $(document).on('change', '[id^=sequence-report-filters-]', async function() {
+                const $select = $(this);
+                const selectedCategory = $select.val();
+                const idParts = $select.attr('id').split('-');
+                if (idParts.length < 4) return;
+                const setId = idParts[3 - 1];
+                const tabIndex = idParts[4 - 1];
+                const sequence2TabPane = $(`#sequence-${setId}-${tabIndex}`);
+                const sequence2Id = sequence2TabPane.data('sequence');
+                const prevTabIndex = parseInt(tabIndex) - 1;
+                if (prevTabIndex < 1) return;
+                const prevSequenceTabPane = $(`#sequence-${setId}-${prevTabIndex}`);
+                const prevSequenceId = prevSequenceTabPane.data('sequence');
+                if (!prevSequenceId) return;
+                const $subscriberDropdown = sequence2TabPane.find(
+                    '.preview-subscriber-dropdown, #preview-subscriber');
+                if (!selectedCategory || selectedCategory === '__select_all__') {
+                    $subscriberDropdown.empty().append('<option value="">Select Subscriber</option>');
+                    return;
+                }
+                await updatePreviewSubscribersFromPrevSequence(prevSequenceId, selectedCategory,
+                    $subscriberDropdown);
+            });
+
+            $(document).on('click', '.preview-email', async function() {
+                const $btn = $(this);
+                const sequence = $btn.data('sequence');
+                const $tabPane = $(`.tab-pane[data-sequence="${sequence}"]`);
+                if (!$tabPane.length) {
+                    alert('Error: Sequence tab not found.');
+                    return;
+                }
+                const idParts = $tabPane.attr('id').split('-');
+                if (idParts.length < 3) {
+                    alert('Error: Invalid sequence tab format.');
+                    return;
+                }
+                const setId = idParts[1];
+                const tabIndex = idParts[2];
+                if (tabIndex != 1) {
+                    $('#previewModal').modal('show');
+                    return;
+                }
+                const audienceId = $(`#sequence-audience-${setId}-${tabIndex}`).val();
+                const templateId = $(`#sequence-template-${setId}-${tabIndex}`).val();
+                $('#preview-loading').show();
+                $('#preview-content-inner').html('');
+                $('#preview-subscriber').empty().append(
+                    '<option value="">Loading subscribers...</option>');
+                if (audienceId) {
+                    try {
+                        const subRes = await axios.get(`/drift/audiences/${audienceId}/subscribers`);
+                        const subData = subRes.data;
+                        const subscribers = Array.isArray(subData) ?
+                            subData :
+                            (Array.isArray(subData.subscribers) ? subData.subscribers : []);
+                        $('#preview-subscriber').empty().append(
+                            '<option value="">Select Subscriber</option>');
+                        if (subscribers.length === 0) {
+                            $('#preview-subscriber').append(
+                                '<option value="">No subscribers found</option>');
+                        } else {
+                            subscribers.forEach(sub => {
+                                $('#preview-subscriber').append(
+                                    `<option value="${sub.id}">${sub.first_name} ${sub.last_name || ''} (${sub.email})</option>`
+                                );
+                            });
+                        }
+                    } catch (error) {
+                        $('#preview-subscriber').empty().append(
+                            '<option value="">Failed to load subscribers</option>');
+                        console.error('Error loading subscribers:', error);
+                    }
+                } else {
+                    $('#preview-subscriber').empty().append(
+                        '<option value="">Select an audience</option>');
+                }
+                $('#previewModal').modal('show');
+                if (!templateId) {
+                    $('#preview-loading').hide();
+                    $('#preview-content-inner').html(
+                        '<p class="text-info">Please select a template to preview.</p>');
+                    $('#previewModalLabel').text('Email Preview');
+                    return;
+                }
+                try {
+                    const tplRes = await axios.get(`/drift/templates/${templateId}/preview`);
+                    const tplData = tplRes.data;
+                    $('#preview-content-inner').html(tplData.content || '<p>No preview available.</p>');
+                    $('#previewModalLabel').text(`Preview: ${tplData.title || 'Template'}`);
+                    $('#preview-loading').hide();
+                } catch (error) {
+                    $('#preview-loading').hide();
+                    $('#preview-content-inner').html(
+                        '<p class="text-danger">Failed to load template preview.</p>');
+                    $('#previewModalLabel').text('Email Preview');
+                    console.error('Error loading template preview:', error);
+                }
+            });
+
+            function updateSequenceIds(oldId, newId) {
+                const $sequenceTab = $(`.tab-pane[data-sequence="${oldId}"]`);
+                const idAttr = $sequenceTab.attr('id');
+                if (!idAttr) {
+                    console.error('Sequence tab ID attribute is missing for oldId:', oldId);
+                    return;
+                }
+                const idParts = idAttr.split('-');
+                if (idParts.length < 3) {
+                    console.error('Invalid sequence tab ID format:', idAttr);
+                    return;
+                }
+                const setId = idParts[1];
+                const tabIndex = idParts[2];
+                if (sequenceIdsMap[setId]) {
+                    sequenceIdsMap[setId][tabIndex] = String(newId);
+                }
+                const newSequenceId = String(newId);
+
+                $sequenceTab.attr('data-sequence', newSequenceId);
+
+                const buttons = [
+                    '.send-immediately',
+                    '.schedule-sequence',
+                    '.preview-email',
+                    '.view-reports',
+                    '.pause-sequence',
+                    '.cancel-sequence'
+                ];
+                buttons.forEach(selector => {
+                    $(`${selector}[data-sequence="${oldId}"]`).attr('data-sequence', newSequenceId);
+                });
+
+                const $reportsSection = $(`#reports-${oldId}`);
+                $reportsSection.attr('id', `reports-${newSequenceId}`);
+
+                const stats = ['sent', 'no_longer', 'automatic_reply', 'replied', 'unsubscribed', 'softbounce',
+                    'hardbounce', 'unopened'
+                ];
+                stats.forEach(stat => {
+                    $(`#reports-${stat}-${oldId}`).attr('id', `reports-${stat}-${newSequenceId}`);
+                    $(`#reports-${stat}-emails-${oldId}`).attr('id',
+                        `reports-${stat}-emails-${newSequenceId}`);
+                });
+
+                const filters = ['replied', 'unsubscribed', 'softbounce', 'unopened',
+                    'hardbounce'
+                ];
+                filters.forEach(filter => {
+                    $(`#filter-${filter}-${oldId}`).attr('id', `filter-${filter}-${newSequenceId}`).attr(
+                        'data-sequence', newSequenceId);
+                    $(`label[for="filter-${filter}-${oldId}"]`).attr('for',
+                        `filter-${filter}-${newSequenceId}`);
+                });
+            }
+
+            function fetchReports(sequence) {
+                const sequenceId = String(sequence);
+                const $reportsSection = $(`#reports-${sequenceId}`);
+                const $reportContent = $(`#reports-content-${sequenceId}`);
+                const $reportLoading = $(`#reports-loading-${sequenceId}`);
+                const $reportMessage = $(`#reports-message-${sequenceId}`);
+                const $viewReportsBtn = $(`.view-reports[data-sequence="${sequenceId}"]`);
+
+                // Show the reports section and loader, hide content and message
+                $reportsSection.show();
+                $reportContent.hide();
+                $reportLoading.show();
+                $reportMessage.hide().text('');
+
+                // Initialize with default values
+                const categories = [{
+                        key: 'sent',
+                        dataKey: 'sent'
+                    },
+                    {
+                        key: 'no_longer',
+                        dataKey: 'no_longer'
+                    },
+                    {
+                        key: 'automatic_reply',
+                        dataKey: 'automatic_reply'
+                    },
+                    {
+                        key: 'replied',
+                        dataKey: 'replied'
+                    },
+                    {
+                        key: 'unsubscribed',
+                        dataKey: 'unsubscribed'
+                    },
+                    {
+                        key: 'softbounce',
+                        dataKey: 'softbounce'
+                    },
+                    {
+                        key: 'hardbounce',
+                        dataKey: 'hardbounce'
+                    },
+                    {
+                        key: 'unopened',
+                        dataKey: 'unopened'
+                    }
+                ];
+
+                // Reset report values to 0
+                categories.forEach(cat => {
+                    $(`#reports-${cat.key}-${sequenceId}`).text(0);
+                });
+                $reportMessage.text('This sequence has not been sent yet. No report data available.').hide();
+
+                if (!sequenceId.startsWith('new-')) {
+                    console.log('Fetching reports for sequence:', sequenceId, 'with set_id:', activeSetId);
+                    axios.get(`/drift/reports/${sequenceId}`)
+                        .then(response => {
+                            const data = response.data || {};
+                            if (Object.values(data).some(val => (val?.count ?? val ?? 0) > 0)) {
+                                $reportMessage.hide();
+                            } else {
+                                $reportMessage.show();
+                            }
+                            categories.forEach(cat => {
+                                const count = data[cat.dataKey]?.count ?? data[cat.dataKey] ?? 0;
+                                $(`#reports-${cat.key}-${sequenceId}`).text(count);
+                            });
+
+                            // Hide loader, show content
+                            $reportLoading.hide();
+                            $reportContent.show();
+                            $viewReportsBtn.text('Hide Reports');
+                        })
+                        .catch(error => {
+                            console.error('Failed to fetch reports:', error);
+                            // Hide loader, show message
+                            $reportLoading.hide();
+                            $reportContent.hide();
+                            $reportMessage.text(
+                                error.response?.data?.error || 'No report data available for this sequence.'
+                            ).show();
+                            $viewReportsBtn.text('Hide Reports');
+                        });
+                } else {
+                    // For new sequences, hide loader, show message
+                    $reportLoading.hide();
+                    $reportContent.hide();
+                    $reportMessage.show();
+                    $viewReportsBtn.text('Hide Reports');
+                }
+            }
+
+            function updateNextSequenceFilters(sequenceId, setId) {
+                const $tabPane = $(`.tab-pane[data-sequence='${sequenceId}']`);
+                if ($tabPane.length) {
+                    const idAttr = $tabPane.attr('id');
+                    if (idAttr) {
+                        const idParts = idAttr.split('-');
+                        if (idParts.length >= 3) {
+                            const setId = idParts[1];
+                            const tabIndex = parseInt(idParts[2]);
+                            const nextTabIndex = tabIndex + 1;
+                            if (sequenceIdsMap[setId] && sequenceIdsMap[setId][nextTabIndex]) {
+                                fetchReportCategories(setId, nextTabIndex, sequenceIdsMap[setId][nextTabIndex]);
+                            }
+                        }
+                    }
+                }
+            }
+
+            function fetchReportCategories(setId, tabIndex, sequenceId) {
+                const prevTabIndex = tabIndex - 1;
+                if (prevTabIndex < 1) return;
+
+                const prevSeqId = sequenceIdsMap[setId]?.[prevTabIndex];
+                if (!prevSeqId) {
+                    console.warn(`No previous sequence ID found for set ${setId}, tab ${prevTabIndex}`);
+                    populateDefaultCategories(setId, tabIndex);
+                    return;
+                }
+
+                const $select = $(`#sequence-report-filters-${setId}-${tabIndex}`);
+                const selected = $select.data('selected') || [];
+
+                $select.empty().append('<option value="">Loading...</option>').prop('disabled', true);
+
+                axios.get(`/drift/reports/${prevSeqId}`)
+                    .then(response => {
+                        const data = response.data || {};
+                        $select.empty().append('<option value="__select_all__">-- Select All --</option>');
+
+                        const categories = [{
+                                key: 'sent',
+                                label: `Sent (${data.sent?.count ?? data.sent ?? 0})`
+                            },
+                            {
+                                key: 'no_longer',
+                                label: `No Longer (${data.no_longer?.count ?? data.no_longer ?? 0})`
+                            },
+                            {
+                                key: 'automatic_reply',
+                                label: `Automatic Reply (${data.automatic_reply?.count ?? data.automatic_reply ?? 0})`
+                            },
+                            {
+                                key: 'replied',
+                                label: `Replied (${data.replied?.count ?? data.replied ?? 0})`
+                            },
+                            {
+                                key: 'unsubscribed',
+                                label: `Unsubscribed (${data.unsubscribed?.count ?? data.unsubscribed ?? 0})`
+                            },
+                            {
+                                key: 'softbounce',
+                                label: `Softbounce (${data.softbounce?.count ?? data.softbounce ?? 0})`
+                            },
+                            {
+                                key: 'hardbounce',
+                                label: `Hardbounce (${data.hardbounce?.count ?? data.hardbounce ?? 0})`
+                            },
+                            {
+                                key: 'unopened',
+                                label: `Unopened (${data.unopened?.count ?? data.unopened ?? 0})`
+                            }
+                        ];
+
+                        categories.forEach(cat => {
+                            $select.append(`<option value="${cat.key}">${cat.label}</option>`);
+                        });
+
+                        $select.prop('disabled', false);
+                        initializeSelect2($select);
+
+                        if (Object.values(data).every(val => (val?.count ?? val ?? 0) === 0)) {
+                            $select.after(
+                                '<div class="text-info mt-1">Previous sequence has no report data. Showing default categories.</div>'
+                            );
+                        }
+                    })
+                    .catch(error => {
+                        console.error(`Failed to fetch report categories for set ${setId}, tab ${tabIndex}:`,
+                            error);
+                        populateDefaultCategories(setId, tabIndex);
+                    });
+            }
+
+            function populateDefaultCategories(setId, tabIndex, prevSequenceName = `Sequence ${tabIndex - 1}`) {
+                const $select = $(`#sequence-report-filters-${setId}-${tabIndex}`);
+                const selected = $select.data('selected') || [];
+
+                $select.empty().append('<option value="__select_all__">-- Select All --</option>');
+
+                const categories = [{
+                        key: 'sent',
+                        label: 'Sent (0)'
+                    },
+                    {
+                        key: 'no_longer',
+                        label: 'No Longer (0)'
+                    },
+                    {
+                        key: 'automatic_reply',
+                        label: 'Automatic Reply (0)'
+                    },
+                    {
+                        key: 'replied',
+                        label: 'Replied (0)'
+                    },
+                    {
+                        key: 'unsubscribed',
+                        label: 'Unsubscribed (0)'
+                    },
+                    {
+                        key: 'softbounce',
+                        label: 'Softbounce (0)'
+                    },
+                    {
+                        key: 'hardbounce',
+                        label: 'Hardbounce (0)'
+                    },
+                    {
+                        key: 'unopened',
+                        label: 'Unopened (0)'
+                    }
+                ];
+
+                categories.forEach(cat => {
+                    $select.append(`<option value="${cat.key}">${cat.label}</option>`);
+                });
+
+                initializeSelect2($select);
+
+                $select.after(
+                    '<div class="text-info mt-1">Previous sequence has no report data. Showing default categories.</div>'
+                );
+            }
+            $(document).on('click', '.view-reports', function() {
+                const $btn = $(this);
+                const sequenceId = $btn.data('sequence');
+                const $tabPane = $(`.tab-pane[data-sequence="${sequenceId}"]`);
+
+                if (!$tabPane.length) {
+                    alert('Error: Unable to find sequence tab pane.');
+                    return;
+                }
+
+                const setId = $tabPane.data('set');
+                const $reportSection = $(`#reports-${sequenceId}`);
+                const $reportMessage = $(`#reports-message-${sequenceId}`);
+
+                $reportSection.find('span[id^=reports-]').text('0'); // Reset values
+                $reportMessage.hide().text('');
+                fetchReports(sequenceId); // Loader handled here
+            });
+
+
+            $(document).on('click', '.refresh-reports-btn', function() {
+                const $btn = $(this);
+                const sequenceId = $btn.data('sequence');
+                if (!sequenceId) return;
+                $btn.prop('disabled', true);
+                const $icon = $btn.find('i');
+                const originalIcon = $icon.attr('class');
+                $icon.removeClass().addClass('bi bi-arrow-clockwise spin-refresh');
+                fetchReports(sequenceId); // Loader handled here
+                setTimeout(() => {
+                    $btn.prop('disabled', false);
+                    $icon.removeClass().addClass(originalIcon);
+                }, 1200);
+            });
+
+            $(document).on('click', '.send-immediately', function() {
+                const $btn = $(this);
+                const sequence = $btn.data('sequence');
+                const $tabPane = $(`.tab-pane[data-sequence="${sequence}"]`);
+                if (!$tabPane.length) {
+                    console.error('Tab pane not found for sequence:', sequence);
+                    alert('Error: Sequence tab not found.');
+                    return;
+                }
+                const idParts = $tabPane.attr('id').split('-');
+                if (idParts.length < 3) {
+                    console.error('Invalid tab pane ID format:', $tabPane.attr('id'));
+                    alert('Error: Invalid sequence tab format.');
+                    return;
+                }
+                const setId = idParts[1];
+                const tabIndex = idParts[2];
+                if (!validateForm(sequence, tabIndex, setId)) return;
+
+                $btn.prop('disabled', true).append(
+                    '<span class="spinner-border spinner-border-sm loading-spinner" role="status" aria-hidden="true"></span>'
+                );
+
+                // Trigger save-all-sequences-btn logic
+                const $saveBtn = $('#save-all-sequences-btn');
+                $saveBtn.prop('disabled', true).append(
+                    '<span class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true"></span>'
+                );
+
+                const $sequenceForms = $(`#sequenceTabContent-${setId} form`);
+                let allValid = true;
+                const sequences = [];
+
+                $sequenceForms.each(function(index) {
+                    const formTabIndex = index + 1;
+                    const $form = $(this);
+                    const formSequenceId = $form.find('input[name="sequence_id"]').val();
+
+                    if (!validateForm(formSequenceId, formTabIndex, setId)) {
+                        allValid = false;
+                        return false;
+                    }
+
+                    const sequenceData = {
+                        sequence_id: formSequenceId || null,
+                        set_id: setId,
+                        name: $form.find(`#sequence-name-${setId}-${formTabIndex}`).val(),
+                        subject: $form.find(`#sequence-subject-${setId}-${formTabIndex}`).val(),
+                        template_id: $form.find(`#sequence-template-${setId}-${formTabIndex}`)
+                            .val(),
+                        audience_id: formTabIndex === 1 ? $form.find(
+                            `#sequence-audience-${setId}-${formTabIndex}`).val() : null,
+                        from_emails: $form.find(`#sequence-from-email-${setId}-${formTabIndex}`)
+                            .val() || [],
+                        time_gap: formTabIndex === 1 ? parseInt($form.find(
+                                `#sequence-time-gap-${setId}-${formTabIndex}`).val()) || null :
+                            null,
+                        batch_size: formTabIndex === 1 ? parseInt($form.find(
+                                `#sequence-batch-size-${setId}-${formTabIndex}`).val()) ||
+                            null : null,
+                        wait_time: parseInt($form.find(
+                            `#sequence-wait-time-${setId}-${formTabIndex}`).val()) || 0,
+                        wait_unit: $form.find(`#sequence-wait-unit-${setId}-${formTabIndex}`)
+                            .val() || 'minutes',
+                        categories: formTabIndex > 1 ? ($form.find(
+                                `#sequence-report-filters-${setId}-${formTabIndex}`)
+                            .val() || []) : []
+                    };
+                    sequences.push(sequenceData);
+                });
+
+                if (!allValid) {
+                    $btn.prop('disabled', false).find('.loading-spinner').remove();
+                    $saveBtn.prop('disabled', false).find('.spinner-border').remove();
+                    return;
+                }
+
+                axios.post('/drift/save-sequences', {
+                        sequences: sequences,
+                        set_id: setId,
+                        _token: $('meta[name="csrf-token"]').attr('content')
+                    })
+                    .then(response => {
+                        $(`#sequenceTabContent-${setId} form`).attr('data-saved', 'true');
+                        $saveBtn.prop('disabled', false).find('.spinner-border').remove();
+
+                        sequences.forEach((sequence, index) => {
+                            const formTabIndex = index + 1;
+                            if (!sequence.sequence_id || sequence.sequence_id.startsWith(
+                                    'new-')) {
+                                const newSequenceId = response.data.sequences?.[index]?.id ||
+                                    sequence.sequence_id;
+                                if (newSequenceId && newSequenceId !== sequence.sequence_id) {
+                                    sequenceIdsMap[setId][formTabIndex] = String(newSequenceId);
+                                    $(`#sequence-${setId}-${formTabIndex}`).attr(
+                                        'data-sequence', newSequenceId);
+                                    $(`#sequence-${setId}-${formTabIndex}-form input[name="sequence_id"]`)
+                                        .val(newSequenceId);
+                                    $(`.delete-sequence-tab[data-tab-index="${formTabIndex}"][data-set="${setId}"]`)
+                                        .attr('data-sequence', newSequenceId);
+                                    if (formTabIndex == tabIndex && sequence.sequence_id ==
+                                        sequence) {
+                                        sequence = newSequenceId;
+                                    }
+                                }
+                            }
+                        });
+
+                        // Proceed with sending the sequence
+                        const $form = $(`#sequence-${setId}-${tabIndex}-form`);
+                        const data = $form.serializeArray();
+                        const formData = {
+                            sequence_id: sequence,
+                            set_id: setId,
+                            _token: $('meta[name="csrf-token"]').attr('content'),
+                            is_first: tabIndex == 1
+                        };
+                        data.forEach(item => {
+                            if (item.name === 'from_emails[]') {
+                                formData['from_emails'] = formData['from_emails'] || [];
+                                if (item.value !== '__select_all__') formData['from_emails']
+                                    .push(item.value);
+                            } else if (item.name === 'time_gap' || item.name === 'batch_size') {
+                                formData[item.name] = parseInt(item.value) || 0;
+                            } else {
+                                formData[item.name] = item.value;
+                            }
+                        });
+
+                        axios.post('/api/drift/send', formData)
+                            .then(response => {
+                                console.log('Send sequence response:', response.data);
+                                if (!response.data.sequence || !response.data.sequence.id) {
+                                    console.error('Invalid response structure:', response.data);
+                                    alert('Error: Invalid server response.');
+                                    $btn.prop('disabled', false).find('.loading-spinner').remove();
+                                    return;
+                                }
+                                const newSequenceId = response.data.sequence.id;
+                                const newSetId = response.data.sequence.set_id || setId;
+                                updateSequenceIds(sequence, newSequenceId);
+                                if (newSetId !== setId) {
+                                    activeSetId = newSetId;
+                                    $(`#active-set-id-${setId}`).text(activeSetId);
+                                }
+                                $(`.view-reports[data-sequence="${newSequenceId}"]`).prop(
+                                    'disabled', false);
+                                $(`.pause-sequence[data-sequence="${newSequenceId}"]`).prop(
+                                    'disabled', false);
+                                $(`.cancel-sequence[data-sequence="${newSequenceId}"]`).prop(
+                                    'disabled', false);
+                                alert('Sequence sent successfully!');
+                                $btn.prop('disabled', false).find('.loading-spinner').remove();
+                                setTimeout(() => {
+                                    fetchReports(newSequenceId);
+                                    $(`#reports-${newSequenceId}`).show();
+                                    $(`.view-reports[data-sequence="${newSequenceId}"]`)
+                                        .text('Hide Reports');
+                                    startReportsPolling(newSequenceId, newSetId);
+                                    updateNextSequenceFilters(newSequenceId, newSetId);
+                                }, 1000);
+                            })
+                            .catch(error => {
+                                console.error('Failed to send sequence:', error);
+                                alert('Failed to send sequence: ' + (error.response?.data
+                                    ?.details || 'Unknown error'));
+                                $btn.prop('disabled', false).find('.loading-spinner').remove();
+                            });
+                    })
+                    .catch(error => {
+                        console.error('Failed to save sequences:', error);
+                        alert('Failed to save sequences: ' + (error.response?.data?.error ||
+                            'Unknown error'));
+                        $btn.prop('disabled', false).find('.loading-spinner').remove();
+                        $saveBtn.prop('disabled', false).find('.spinner-border').remove();
+                    });
+            });
+
+            $(document).on('click', '.schedule-sequence', function() {
+                const $btn = $(this);
+                const sequence = $btn.data('sequence');
+                const $tabPane = $(`.tab-pane[data-sequence="${sequence}"]`);
+
+                if (!$tabPane.length) {
+                    console.error('Tab pane not found for sequence:', sequence);
+                    alert('Error: Sequence tab not found.');
+                    return;
+                }
+
+                const idParts = $tabPane.attr('id').split('-');
+                if (idParts.length < 3) {
+                    console.error('Invalid tab pane ID format:', $tabPane.attr('id'));
+                    alert('Error: Invalid sequence tab format.');
+                    return;
+                }
+
+                const setId = idParts[1];
+                const tabIndex = idParts[2];
+                if (!validateForm(sequence, tabIndex, setId)) return;
+
+                $btn.prop('disabled', true).append(
+                    '<span class="spinner-border spinner-border-sm loading-spinner" role="status" aria-hidden="true"></span>'
+                );
+
+                // Trigger save-all-sequences-btn logic
+                const $saveBtn = $('#save-all-sequences-btn');
+                $saveBtn.prop('disabled', true).append(
+                    '<span class="spinner-border spinner-border-sm ms-2" role="status" aria-hidden="true"></span>'
+                );
+
+                const $sequenceForms = $(`#sequenceTabContent-${setId} form`);
+                let allValid = true;
+                const sequences = [];
+
+                $sequenceForms.each(function(index) {
+                    const formTabIndex = index + 1;
+                    const $form = $(this);
+                    const formSequenceId = $form.find('input[name="sequence_id"]').val();
+
+                    if (!validateForm(formSequenceId, formTabIndex, setId)) {
+                        allValid = false;
+                        return false;
+                    }
+
+                    const sequenceData = {
+                        sequence_id: formSequenceId || null,
+                        set_id: setId,
+                        name: $form.find(`#sequence-name-${setId}-${formTabIndex}`).val(),
+                        subject: $form.find(`#sequence-subject-${setId}-${formTabIndex}`).val(),
+                        template_id: $form.find(`#sequence-template-${setId}-${formTabIndex}`)
+                            .val(),
+                        audience_id: formTabIndex === 1 ? $form.find(
+                            `#sequence-audience-${setId}-${formTabIndex}`).val() : null,
+                        from_emails: $form.find(`#sequence-from-email-${setId}-${formTabIndex}`)
+                            .val() || [],
+                        time_gap: formTabIndex === 1 ? parseInt($form.find(
+                                `#sequence-time-gap-${setId}-${formTabIndex}`).val()) || null :
+                            null,
+                        batch_size: formTabIndex === 1 ? parseInt($form.find(
+                                `#sequence-batch-size-${setId}-${formTabIndex}`).val()) ||
+                            null : null,
+                        wait_time: parseInt($form.find(
+                            `#sequence-wait-time-${setId}-${formTabIndex}`).val()) || 0,
+                        wait_unit: $form.find(`#sequence-wait-unit-${setId}-${formTabIndex}`)
+                            .val() || 'minutes',
+                        categories: formTabIndex > 1 ? ($form.find(
+                                `#sequence-report-filters-${setId}-${formTabIndex}`)
+                            .val() || []) : []
+                    };
+                    sequences.push(sequenceData);
+                });
+
+                if (!allValid) {
+                    $btn.prop('disabled', false).find('.loading-spinner').remove();
+                    $saveBtn.prop('disabled', false).find('.spinner-border').remove();
+                    return;
+                }
+
+                axios.post('/drift/save-sequences', {
+                        sequences: sequences,
+                        set_id: setId,
+                        _token: $('meta[name="csrf-token"]').attr('content')
+                    })
+                    .then(response => {
+                        $(`#sequenceTabContent-${setId} form`).attr('data-saved', 'true');
+                        $saveBtn.prop('disabled', false).find('.spinner-border').remove();
+                        $btn.prop('disabled', false).find('.loading-spinner').remove();
+
+                        sequences.forEach((sequenceData, index) => {
+                            const formTabIndex = index + 1;
+                            if (!sequenceData.sequence_id || sequenceData.sequence_id
+                                .startsWith('new-')) {
+                                const newSequenceId = response.data.sequences?.[index]?.id ||
+                                    sequenceData.sequence_id;
+                                if (newSequenceId && newSequenceId !== sequenceData
+                                    .sequence_id) {
+                                    sequenceIdsMap[setId][formTabIndex] = String(newSequenceId);
+                                    $(`#sequence-${setId}-${formTabIndex}`).attr(
+                                        'data-sequence', newSequenceId);
+                                    $(`#sequence-${setId}-${formTabIndex}-form input[name="sequence_id"]`)
+                                        .val(newSequenceId);
+                                    $(`.delete-sequence-tab[data-tab-index="${formTabIndex}"][data-set="${setId}"]`)
+                                        .attr('data-sequence', newSequenceId);
+                                    if (formTabIndex == tabIndex && sequenceData.sequence_id ==
+                                        sequence) {
+                                        sequence = newSequenceId;
+                                    }
+                                }
+                            }
+                        });
+
+                        $('#schedule-sequence-id').val(sequence);
+                        $('#scheduleModal').modal('show');
+                    })
+                    .catch(error => {
+                        console.error('Failed to save sequences:', error);
+                        alert('Failed to save sequences: ' + (error.response?.data?.error ||
+                            'Unknown error'));
+                        $btn.prop('disabled', false).find('.loading-spinner').remove();
+                        $saveBtn.prop('disabled', false).find('.spinner-border').remove();
+                    });
+            });
+
+            $('#schedule-form').submit(function(e) {
+                e.preventDefault();
+                const $btn = $(this).find('button[type="submit"]');
+                $btn.prop('disabled', true).find('.loading-spinner').show();
+                const sequence = $('#schedule-sequence-id').val();
+                const $tabPane = $(`.tab-pane[data-sequence="${sequence}"]`);
+                if (!$tabPane.length) {
+                    console.error('Tab pane not found for sequence:', sequence);
+                    alert('Error: Sequence tab not found.');
+                    $btn.prop('disabled', false).find('.loading-spinner').hide();
+                    return;
+                }
+                const idParts = $tabPane.attr('id').split('-');
+                if (idParts.length < 3) {
+                    console.error('Invalid tab pane ID format:', $tabPane.attr('id'));
+                    alert('Error: Invalid sequence tab format.');
+                    $btn.prop('disabled', false).find('.loading-spinner').hide();
+                    return;
+                }
+                const setId = idParts[1];
+                const tabIndex = idParts[2];
+                if (!validateScheduleForm()) {
+                    $btn.prop('disabled', false).find('.loading-spinner').hide();
+                    return;
+                }
+                const $form = $(`#sequence-${setId}-${tabIndex}-form`);
+                const data = $form.serializeArray();
+                const formData = {
+                    sequence_id: sequence,
+                    set_id: setId,
+                    scheduled_at: $('#schedule-time').val(),
+                    timezone: $('#schedule-timezone').val(),
+                    _token: $('meta[name="csrf-token"]').attr('content'),
+                    is_first: tabIndex == 1
+                };
+                data.forEach(item => {
+                    if (item.name === 'from_emails[]') {
+                        formData['from_emails'] = formData['from_emails'] || [];
+                        if (item.value !== '__select_all__') formData['from_emails'].push(item
+                            .value);
+                    } else if (item.name === 'filters[]') {
+                        formData['filters'] = formData['filters'] || [];
+                        if (item.value !== '__select_all__') formData['filters'].push(item.value);
+                    } else {
+                        formData[item.name] = item.value;
+                    }
+                });
+                console.log('Scheduling formData:', formData);
+                axios.post(`/api/drift/sequences/${sequence}/schedule`, formData)
+                    .then(response => {
+                        console.log('Schedule sequence response:', response.data);
+                        const newSequenceId = response.data.sequence_id || sequence;
+                        if (newSequenceId !== sequence) {
+                            updateSequenceIds(sequence, newSequenceId);
+                        }
+                        $(`.view-reports[data-sequence="${newSequenceId}"]`).prop('disabled', false);
+                        $(`.pause-sequence[data-sequence="${newSequenceId}"]`).prop('disabled', false);
+                        $(`.cancel-sequence[data-sequence="${newSequenceId}"]`).prop('disabled', false);
+                        alert('Sequence scheduled successfully!');
+                        $('#scheduleModal').modal('hide');
+                        $btn.prop('disabled', false).find('.loading-spinner').hide();
+                        setTimeout(() => {
+                            fetchReports(newSequenceId);
+                            $(`#reports-${newSequenceId}`).show();
+                            $(`.view-reports[data-sequence="${newSequenceId}"]`).text(
+                                'Hide Reports');
+                            startReportsPolling(newSequenceId, setId);
+                            updateNextSequenceFilters(newSequenceId, setId);
+                        }, 1000);
+                    })
+                    .catch(error => {
+                        console.error('Failed to schedule sequence:', error);
+                        const errorMessage = error.response?.data?.details || error.response?.data
+                            ?.error || error.message || 'Unknown error';
+                        alert('Failed to schedule sequence: ' + errorMessage);
+                        $btn.prop('disabled', false).find('.loading-spinner').hide();
+                    });
+            });
+
+            $(document).on('click', '.preview-email', function() {
+                const sequenceId = $(this).data('sequence');
+                const $tabPane = $(`.tab-pane[data-sequence="${sequenceId}"]`);
+                if (!$tabPane.length) {
+                    console.error('Tab pane not found for sequence:', sequenceId);
+                    alert('Error: Sequence tab not found.');
+                    return;
+                }
+                const idParts = $tabPane.attr('id').split('-');
+                if (idParts.length < 3) {
+                    console.error('Invalid tab pane ID format:', $tabPane.attr('id'));
+                    alert('Error: Invalid sequence tab format.');
+                    return;
+                }
+                const setId = idParts[1];
+                const tabIndex = idParts[2];
+                const $form = $(`#sequence-${setId}-${tabIndex}-form`);
+
+                if (!templateId) {
+                    alert('Please select a template to preview.');
+                    return;
+                }
+                if (!subject) {
+                    alert('Please enter a subject for the email.');
+                    return;
+                }
+                if (sequence.startsWith('new-')) {
+                    alert('Cannot preview an unsaved sequence. Please save the sequence first.');
+                    return;
+                }
+
+                $('#previewModal').data('sequence', sequence).data('set-id', setId).data('tab-index',
+                    tabIndex);
+                $('#preview-content-inner').empty();
+                $('#preview-loading').show();
+                $('#preview-subscriber').empty().append('<option value="">Select Subscriber</option>');
+
+                $('#previewModal').modal('show');
+
+                const csrfToken = $('meta[name="csrf-token"]').attr('content');
+                if (!csrfToken) {
+                    console.error('CSRF token is missing');
+                    $('#preview-loading').hide();
+                    $('#preview-content-inner').html(
+                        '<p class="text-danger">Error: CSRF token is missing.</p>');
+                    return;
+                }
+
+                axios.get('/drift/subscribers', {
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken
+                        }
+                    })
+                    .then(response => {
+                        console.log('Subscribers response:', response.data);
+                        const subscribers = Array.isArray(response.data) ? response.data : response.data
+                            .subscribers || [];
+                        $('#preview-subscriber').empty().append(
+                            '<option value="">Select Subscriber</option>');
+                        subscribers.forEach(subscriber => {
+                            if (subscriber.id && subscriber.email) {
+                                $('#preview-subscriber').append(
+                                    `<option value="${subscriber.id}">${subscriber.first_name || 'Unknown'} ${subscriber.last_name || ''} (${subscriber.email})</option>`
+                                );
+                            }
+                        });
+
+                        if (subscribers.length > 0) {
+                            $('#preview-subscriber').val(subscribers[0].id).trigger('change');
+                        } else {
+                            $('#preview-loading').hide();
+                            $('#preview-content-inner').html(
+                                '<p class="text-info">No subscribers available. Showing generic preview.</p>'
+                            );
+                            fetchGenericPreview(sequence, setId, tabIndex, templateId, subject);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Failed to fetch subscribers:', error);
+                        $('#preview-loading').hide();
+                        const errorMessage = error.response?.data?.error ||
+                            'Unable to load subscribers. Showing generic preview.';
+                        $('#preview-content-inner').html(`<p class="text-danger">${errorMessage}</p>`);
+                        fetchGenericPreview(sequence, setId, tabIndex, templateId, subject);
+                    });
+            });
+
+            $('#preview-subscriber').change(function() {
+                const subscriberId = $(this).val();
+                const sequence = $('#previewModal').data('sequence');
+                const setId = $('#previewModal').data('set-id');
+                const tabIndex = $('#previewModal').data('tab-index');
+
+                if (!sequence || !setId || !tabIndex) {
+                    $('#preview-content-inner').html(
+                        '<p class="text-danger">Error: Sequence data missing.</p>');
+                    $('#preview-loading').hide();
+                    return;
+                }
+
+                const templateId = $(`#sequence-template-${setId}-${tabIndex}`).val();
+                const subject = $(`#sequence-subject-${setId}-${tabIndex}`).val();
+
+                if (!templateId || !subject) {
+                    $('#preview-content-inner').html(
+                        '<p class="text-info">Please select a template and subject.</p>');
+                    $('#preview-loading').hide();
+                    return;
+                }
+
+                if (!subscriberId) {
+                    $('#preview-content-inner').html(
+                        '<p class="text-info">No subscriber selected. Showing generic preview.</p>');
+                    fetchGenericPreview(sequence, setId, tabIndex, templateId, subject);
+                    return;
+                }
+
+                $('#preview-loading').show();
+                $('#preview-content-inner').empty();
+
+                const csrfToken = $('meta[name="csrf-token"]').attr('content');
+                if (!csrfToken) {
+                    console.error('CSRF token is missing');
+                    $('#preview-loading').hide();
+                    $('#preview-content-inner').html(
+                        '<p class="text-danger">Error: CSRF token is missing.</p>');
+                    return;
+                }
+
+                axios.post('/drift/preview', {
+                        subscriber_id: subscriberId,
+                        template_id: templateId,
+                        subject: subject,
+                        sequence_id: sequence
+                    }, {
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken
+                        }
+                    })
+                    .then(response => {
+                        console.log('Preview response:', response.data);
+                        $('#preview-loading').hide();
+                        $('#preview-content-inner').html(`
+                            <h6>Subject: ${response.data.subject}</h6>
+                            <hr>
+                            ${response.data.content}
+                        `);
+                    })
+                    .catch(error => {
+                        console.error('Failed to load preview:', error);
+                        $('#preview-loading').hide();
+                        const errorMessage = error.response?.data?.error || 'Failed to load preview.';
+                        $('#preview-content-inner').html(`<p class="text-danger">${errorMessage}</p>`);
+                    });
+            });
+
+            function fetchGenericPreview(sequence, setId, tabIndex, templateId, subject) {
+                $('#preview-loading').show();
+                $('#preview-content-inner').empty();
+
+                const csrfToken = $('meta[name="csrf-token"]').attr('content');
+                if (!csrfToken) {
+                    console.error('CSRF token is missing');
+                    $('#preview-loading').hide();
+                    $('#preview-content-inner').html('<p class="text-danger">Error: CSRF token is missing.</p>');
+                    return;
+                }
+
+                axios.post('/drift/preview', {
+                        template_id: templateId,
+                        subject: subject,
+                        sequence_id: sequence
+                    }, {
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken
+                        }
+                    })
+                    .then(response => {
+                        console.log('Generic preview response:', response.data);
+                        $('#preview-loading').hide();
+                        $('#preview-content-inner').html(`
+                            <h6>Subject: ${response.data.subject}</h6>
+                            <hr>
+                            ${response.data.content}
+                        `);
+                    })
+                    .catch(error => {
+                        console.error('Failed to load generic preview:', error);
+                        $('#preview-loading').hide();
+                        const errorMessage = error.response?.data?.error || 'Failed to load generic preview.';
+                        $('#preview-content-inner').html(`<p class="text-danger">${errorMessage}</p>`);
+                    });
+            }
+
+            $('#previewModal').on('hidden.bs.modal', function() {
+                $('#preview-subscriber').empty().append('<option value="">Select Subscriber</option>');
+                $('#preview-content-inner').empty();
+                $('#preview-loading').hide();
+                $('#previewModal').removeData('sequence').removeData('set-id').removeData('tab-index');
+            });
+
+            function validateScheduleForm() {
+                const scheduledAt = $('#schedule-time').val();
+                const timezone = $('#schedule-timezone').val();
+
+                if (!scheduledAt) {
+                    alert('Please select a schedule time.');
+                    return false;
+                }
+                if (!timezone) {
+                    alert('Please select a timezone.');
+                    return false;
+                }
+
+                const now = moment();
+                const scheduledTime = moment.tz(scheduledAt, timezone);
+                if (scheduledTime.isBefore(now)) {
+                    alert('Schedule time must be in the future.');
+                    return false;
+                }
+
+                return true;
+            }
+
+            $(document).on('click', '.create-template', function() {
+                $('#editorModal').modal('show');
+            });
+
+            // Validate subscriber input based on format
+            function validateSubscribers(subscribers, format) {
+                if (!subscribers) return false;
+                const lines = subscribers.trim().split('\n').filter(line => line.trim());
+                const isFirstLastEmail = format === 'first-last-email';
+
+                for (let line of lines) {
+                    const parts = line.split(',').map(part => part.trim());
+                    if (isFirstLastEmail) {
+                        if (parts.length !== 3 || !parts[2].match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                            return false;
+                        }
+                    } else {
+                        if (parts.length !== 2 || !parts[1].match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+
+            // Handle Manual Add Audience
+            $('#save-audience-from-campaign-btn').click(function(e) {
+                e.preventDefault();
+                const $btn = $(this);
+                const name = $('#audience-name-create').val().trim();
+                const format = $('#subscriber-format-create').val();
+                const subscribers = $('#subscribers-input-create').val();
+                $btn.prop('disabled', true).find('.loading-spinner').show();
+
+                // Validation
+                if (!name) {
+                    alert('Please enter an audience name.');
+                    $btn.prop('disabled', false).find('.loading-spinner').hide();
+                    return;
+                }
+                if (!validateSubscribers(subscribers, format)) {
+                    alert(
+                        `Please enter valid subscribers (one per line, ${format === 'first-last-email' ? 'First Name, Last Name, Email' : 'First Name, Email'}).`
+                    );
+                    $btn.prop('disabled', false).find('.loading-spinner').hide();
+                    return;
+                }
+
+                // Prepare data
+                const formData = new FormData();
+                formData.append('name', name);
+                formData.append('subscribers', subscribers);
+                formData.append('format', format);
+                formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+
+                // Send API request
+                axios.post('/drift/audiences', formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        }
+                    })
+                    .then(response => {
+                        $('#createAudienceModal').modal('hide');
+                        alert('Audience created successfully!');
+                        refreshAudienceDropdowns();
+                        $btn.prop('disabled', false).find('.loading-spinner').hide();
+                    })
+                    .catch(error => {
+                        console.error('Failed to create audience:', error);
+                        let errorMessage = error.response?.data?.error || 'Unknown error';
+                        if (error.response?.status === 422) {
+                            errorMessage = error.response.data.details || 'Invalid input provided.';
+                        }
+                        alert('Failed to create audience: ' + errorMessage);
+                        $btn.prop('disabled', false).find('.loading-spinner').hide();
+                    });
+            });
+
+            // Handle CSV Import Audience
+            $('#import-csv-from-campaign-btn').click(function(e) {
+                e.preventDefault();
+                const $btn = $(this);
+                const name = $('#audience-name-csv-create').val().trim();
+                const format = $('#csv-format-create').val();
+                const csvFile = $('#csv-file-create')[0]?.files[0];
+                $btn.prop('disabled', true).find('.loading-spinner').show();
+                const $progress = $('#upload-progress-create');
+                const $progressBar = $progress.find('.progress-bar');
+
+                // Validation
+                if (!name) {
+                    alert('Please enter an audience name.');
+                    $btn.prop('disabled', false).find('.loading-spinner').hide();
+                    return;
+                }
+                if (!csvFile) {
+                    alert('Please upload a CSV file.');
+                    $btn.prop('disabled', false).find('.loading-spinner').hide();
+                    return;
+                }
+
+
+
+                // Prepare data
+                const formData = new FormData();
+                formData.append('name', name);
+                formData.append('subscribers', subscribers);
+                formData.append('format', format);
+                formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+
+                // Send API request
+                axios.post('/drift/audiences', formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        }
+                    })
+                    .then(response => {
+                        $('#createAudienceModal').modal('hide');
+                        alert('Audience created successfully!');
+                        refreshAudienceDropdowns();
+                        $btn.prop('disabled', false).find('.loading-spinner').hide();
+                    })
+                    .catch(error => {
+                        console.error('Failed to create audience:', error);
+                        let errorMessage = error.response?.data?.error || 'Unknown error';
+                        if (error.response?.status === 422) {
+                            errorMessage = error.response.data.details || 'Invalid input provided.';
+                        }
+                        alert('Failed to create audience: ' + errorMessage);
+                        $btn.prop('disabled', false).find('.loading-spinner').hide();
+                    });
+            });
+
+            // Handle CSV Import Audience
+            $('#import-csv-from-campaign-btn').click(function(e) {
+                e.preventDefault();
+                const $btn = $(this);
+                const name = $('#audience-name-csv-create').val().trim();
+                const format = $('#csv-format-create').val();
+                const csvFile = $('#csv-file-create')[0]?.files[0];
+                $btn.prop('disabled', true).find('.loading-spinner').show();
+                const $progress = $('#upload-progress-create');
+                const $progressBar = $progress.find('.progress-bar');
+
+                // Validation
+                if (!name) {
+                    alert('Please enter an audience name.');
+                    $btn.prop('disabled', false).find('.loading-spinner').hide();
+                    return;
+                }
+                if (!csvFile) {
+                    alert('Please upload a CSV file.');
+                    $btn.prop('disabled', false).find('.loading-spinner').hide();
+                    return;
+                }
+
+                // Prepare data
+                const formData = new FormData();
+                formData.append('name', name);
+                formData.append('file', csvFile);
+                formData.append('format', format);
+                formData.append('_token', $('meta[name="csrf-token"]').attr('content'));
+
+                // Show progress bar
+                $progress.show();
+                $progressBar.css('width', '0%').attr('aria-valuenow', 0).text('0%');
+
+                // Send API request with progress tracking
+                axios.post('/drift/audiences', formData, {
+                        headers: {
+                            'Content-Type': 'multipart/form-data'
+                        },
+                        onUploadProgress: progressEvent => {
+                            const percentCompleted = Math.round((progressEvent.loaded * 100) /
+                                progressEvent.total);
+                            $progressBar.css('width', `${percentCompleted}%`)
+                                .attr('aria-valuenow', percentCompleted)
+                                .text(`${percentCompleted}%`);
+                        }
+                    })
+                    .then(response => {
+                        $('#createAudienceModal').modal('hide');
+                        $progress.hide();
+                        alert('Audience imported successfully!');
+                        refreshAudienceDropdowns();
+                        $btn.prop('disabled', false).find('.loading-spinner').hide();
+                    })
+                    .catch(error => {
+                        console.error('Failed to import audience:', error);
+                        $progress.hide();
+                        let errorMessage = error.response?.data?.error || 'Unknown error';
+                        if (error.response?.status === 422) {
+                            errorMessage = error.response.data.details || 'Invalid CSV file or format.';
+                        }
+                        alert('Failed to import audience: ' + errorMessage);
+                        $btn.prop('disabled', false).find('.loading-spinner').hide();
+                    });
+            });
+
+            // Refresh audience dropdowns
+            function refreshAudienceDropdowns() {
+                axios.get('/drift/audiences')
+                    .then(response => {
+                        const audiences = response.data;
+                        $('[id^=sequence-audience-]').each(function() {
+                            const $select = $(this);
+                            const currentValue = $select.val() || '';
+                            $select.empty().append('<option value="">-- Select Audience --</option>');
+                            audiences.forEach(audience => {
+                                $select.append(
+                                    `<option value="${audience.id}">${audience.name || audience.title || audience.id}</option>`
+                                );
+                            });
+                            $select.val(currentValue);
+                            initializeSelect2($select);
+                        });
+                    })
+                    .catch(error => {
+                        console.error('Failed to refresh audiences:', error);
+                        alert('Failed to refresh audience list.');
+                    });
+            }
+
+            // Reset modal on hide
+            $('#createAudienceModal').on('hidden.bs.modal', function() {
+                $('#audience-name-create').val('');
+                $('#subscribers-input-create').val('');
+                $('#subscriber-format-create').val('first-email');
+                $('#audience-name-csv-create').val('');
+                $('#csv-file-create').val('');
+                $('#csv-format-create').val('first-email');
+                $('#upload-progress-create').hide();
+            });
+
+            // Open Create Audience modal
+            $(document).on('click', '.create-audience', function() {
+                $('#createAudienceModal').modal('show');
+            });
+
+            $(document).on('click', '.delete-sequence-tab', function() {
+                const sequenceId = $(this).data('sequence');
+                const tabIndex = $(this).data('tab-index');
+                const setId = $(this).data('set');
+                $('#delete-sequence-id').val(sequenceId);
+                $('#delete-tab-index').val(tabIndex);
+                $('#delete-set-id').val(setId);
+                $('#delete-sequence-message').empty();
+                $('#deleteSequenceModal').modal('show');
+            });
+
+            $(document).on('click', '#confirm-delete-sequence-btn', function() {
+                const $btn = $(this);
+                const sequenceId = $('#delete-sequence-id').val();
+                const tabIndex = $('#delete-tab-index').val();
+                const setId = $('#delete-set-id').val();
+                $btn.prop('disabled', true).find('.loading-spinner').show();
+
+                axios.delete(`/drift/sequences/${sequenceId}`)
+                    .then(response => {
+                        $(`#sequence-tab-${setId}-${tabIndex}`).parent().remove();
+                        $(`#sequence-${setId}-${tabIndex}`).remove();
+                        $('#deleteSequenceModal').modal('hide');
+                        $('#delete-sequence-message').html(
+                            '<div class="alert alert-success">Sequence deleted successfully!</div>');
+                        setTimeout(() => {
+                            $('#delete-sequence-message').empty();
+                        }, 3000);
+                        $btn.prop('disabled', false).find('.loading-spinner').hide();
+                    })
+                    .catch(error => {
+                        console.error('Failed to delete sequence:', error);
+                        $('#delete-sequence-message').html(
+                            `<div class="alert alert-danger">Failed to delete sequence: ${error.response?.data?.error || 'Unknown error'}</div>`
+                        );
+                        $btn.prop('disabled', false).find('.loading-spinner').hide();
+                        setTimeout(() => {
+                            $('#delete-sequence-message').empty();
+                        }, 5000);
+                    });
+            });
+
+            $(document).on('click', '.delete-set-tab', function() {
+                const setId = $(this).data('set');
+                $('#delete-set-id').val(setId);
+                $('#delete-set-message').empty();
+                $('#deleteSetModal').modal('show');
+            });
+
+            $('#confirm-delete-set-btn').click(function() {
+                const setId = $('#delete-set-id').val();
+                const $btn = $(this);
+                $btn.prop('disabled', true).find('.loading-spinner').show();
+
+                axios.delete(`/drift/sets/${setId}`)
+                    .then(response => {
+                        $('#deleteSetModal').modal('hide');
+                        $('#delete-set-message').html(
+                            '<div class="alert alert-success">Set deleted successfully!</div>'
+                        );
+                        fetchSequences(); // Refresh sets
+                        setTimeout(() => {
+                            $('#delete-set-message').empty();
+                        }, 3000);
+                        $btn.prop('disabled', false).find('.loading-spinner').hide();
+                    })
+                    .catch(error => {
+                        console.error('Failed to delete set:', error);
+                        const errorMessage = error.response?.data?.error || 'Unknown error';
+                        $('#delete-set-message').html(
+                            `<div class="alert alert-danger">Failed to delete set: ${errorMessage}</div>`
+                        );
+                        $btn.prop('disabled', false).find('.loading-spinner').hide();
+                        setTimeout(() => {
+                            $('#delete-set-message').empty();
+                        }, 5000);
+                    });
+            });
+            // --- Sequence State Management ---
+            // Store all unsaved sequence data per set
+            let sequencesState = {};
+
+            // Collect all current sequence form data for a set
+            function collectSequencesState(setId) {
+                sequencesState[setId] = {};
+                $(`#sequenceTabContent-${setId} form`).each(function(index) {
+                    const tabIndex = index + 1;
+                    const $form = $(this);
+                    sequencesState[setId][tabIndex] = {
+                        sequence_id: $form.find('input[name="sequence_id"]').val() || null,
+                        set_id: setId,
+                        name: $form.find(`#sequence-name-${setId}-${tabIndex}`).val(),
+                        subject: $form.find(`#sequence-subject-${setId}-${tabIndex}`).val(),
+                        template_id: $form.find(`#sequence-template-${setId}-${tabIndex}`).val(),
+                        audience_id: tabIndex === 1 ? $form.find(
+                            `#sequence-audience-${setId}-${tabIndex}`).val() : null,
+                        from_emails: $form.find(`#sequence-from-email-${setId}-${tabIndex}`).val() ||
+                        [],
+                        time_gap: parseInt($form.find(`#sequence-time-gap-${setId}-${tabIndex}`)
+                            .val()) || null,
+                        batch_size: parseInt($form.find(`#sequence-batch-size-${setId}-${tabIndex}`)
+                            .val()) || null,
+                        wait_time: parseInt($form.find(`#sequence-wait-time-${setId}-${tabIndex}`)
+                            .val()) || 0,
+                        wait_unit: $form.find(`#sequence-wait-unit-${setId}-${tabIndex}`).val() ||
+                            'minutes',
+                        categories: tabIndex > 1 ? ($form.find(
+                            `#sequence-report-filters-${setId}-${tabIndex}`).val() || []) : []
+                    };
+                });
+            }
+
+            // Repopulate sequence forms from JS state
+            function repopulateSequenceFormsFromState(setId) {
+                if (!sequencesState[setId]) return;
+                Object.keys(sequencesState[setId]).forEach(tabIndex => {
+                    const seq = sequencesState[setId][tabIndex];
+                    if (seq) {
+                        populateSequenceForm(setId, tabIndex, seq);
+                    }
+                });
+            }
+
+            // Add new sequence handler
+            $(document).on('click', '[id^=add-sequence-btn-]', function() {
+                const $btn = $(this);
+                const setId = $btn.attr('id').split('add-sequence-btn-')[1];
+                // Collect all current sequence data before adding a new one
+                collectSequencesState(setId);
+                $btn.prop('disabled', true).append(
+                    '<span class="spinner-border spinner-border-sm loading-spinner" role="status" aria-hidden="true"></span>'
+                );
+
+                axios.post('/drift/sequences', {
+                        set_id: setId,
+                        name: `Sequence ${sequenceCount + 1}`,
+                        _token: $('meta[name="csrf-token"]').attr('content')
+                    })
+                    .then(response => {
+                        sequenceCount++;
+                        const newSequenceId = response.data.sequence.id;
+                        createSequenceTab(sequenceCount, newSequenceId, response.data.sequence.name,
+                            setId, `sequenceTabs-${setId}`, `sequenceTabContent-${setId}`);
+                        fetchInitialData();
+                        // Repopulate all previous forms from JS state (preserve unsaved data)
+                        repopulateSequenceFormsFromState(setId);
+                        // Always update wait time field states after new tab
+                        updateWaitTimeFields(setId);
+                        // Activate the new tab
+                        $(`#sequence-tab-${setId}-${sequenceCount}`).tab('show');
+                        $btn.prop('disabled', false).find('.loading-spinner').remove();
+                    })
+                    .catch(error => {
+                        console.error('Failed to create sequence:', error);
+                        alert('Failed to create sequence: ' + (error.response?.data?.error ||
+                            'Unknown error'));
+                        $btn.prop('disabled', false).find('.loading-spinner').remove();
+                    });
+            });
+
+            // Update tab indices after deletion
+            function updateTabIndices() {
+                const $tabs = $('#sequenceTabs li.nav-item').not('#add-sequence-btn');
+                const $contents = $('#sequenceTabContent .tab-pane');
+                $tabs.each(function(index) {
+                    const newIndex = index + 1;
+                    const $tab = $(this).find('.nav-link');
+                    const $deleteBtn = $(this).find('.delete-sequence-tab');
+                    const oldIndex = $tab.attr('id').split('-')[2];
+                    const sequenceId = $deleteBtn.data('sequence');
+                    const setId = $deleteBtn.data('set');
+
+                    // Update tab
+                    $tab.attr('id', `sequence-tab-${setId}-${newIndex}`)
+                        .attr('data-bs-target', `#sequence-${setId}-${newIndex}`)
+                        .attr('aria-controls', `sequence-${setId}-${newIndex}`)
+                        .attr('aria-selected', index === 0)
+                        .text(`Sequence ${newIndex}`);
+
+                    // Update delete button
+                    $deleteBtn.attr('data-tab-index', newIndex);
+
+                    // Update content
+                    const $content = $(`#sequence-${setId}-${oldIndex}`);
+                    $content.attr('id', `sequence-${setId}-${newIndex}`)
+                        .attr('aria-labelledby', `sequence-tab-${setId}-${newIndex}`);
+
+                    // Update form and fields
+                    const $form = $content.find('form');
+                    $form.attr('id', `sequence-${setId}-${newIndex}-form`);
+                    $content.find(`#sequence-name-${setId}-${oldIndex}`).attr('id',
+                        `sequence-name-${setId}-${newIndex}`);
+                    $content.find(`#sequence-subject-${setId}-${oldIndex}`).attr('id',
+                        `sequence-subject-${setId}-${newIndex}`);
+                    $content.find(`#sequence-template-${setId}-${oldIndex}`).attr('id',
+                        `sequence-template-${setId}-${newIndex}`);
+                    $content.find(`#sequence-audience-${setId}-${oldIndex}`).attr('id',
+                        `sequence-audience-${setId}-${newIndex}`);
+                    $content.find(`#sequence-from-email-${setId}-${oldIndex}`).attr('id',
+                        `sequence-from-email-${setId}-${newIndex}`);
+                    $content.find(`#sequence-time-gap-${setId}-${oldIndex}`).attr('id',
+                        `sequence-time-gap-${setId}-${newIndex}`);
+                    $content.find(`#sequence-batch-size-${setId}-${oldIndex}`).attr('id',
+                        `sequence-batch-size-${setId}-${newIndex}`);
+                    $content.find(`#sequence-wait-time-${setId}-${oldIndex}`).attr('id',
+                        `sequence-wait-time-${setId}-${newIndex}`);
+                    $content.find(`#sequence-wait-unit-${setId}-${oldIndex}`).attr('id',
+                        `sequence-wait-unit-${setId}-${newIndex}`);
+
+                    // Update card header
+                    $content.find('.card-header').html(`
+                                Sequence ${newIndex}: ${$content.find(`#sequence-name-${setId}-${newIndex}`).val() || `Sequence ${newIndex}`}
+                                <div>
+                                    <button class="btn btn-danger btn-sm cancel-sequence ms-2" data-sequence="${sequenceId}" disabled>
+                                        Cancel
+                                    </button>
+                                </div>
+                            `);
+                });
+                // Ensure at least one tab is active
+                if ($tabs.length > 0) {
+                    $tabs.first().find('.nav-link').addClass('active').attr('aria-selected', true);
+                    $contents.first().addClass('show active');
+                }
+            }
+
+            // Function to fetch and update sequence reports
+            function fetchSequenceReports(sequenceId, setId) {
+                axios.get(`/drift/sequences/${sequenceId}/reports`, {
+                        params: {
+                            set_id: setId
+                        }
+                    })
+                    .then(response => {
+                        const report = response.data;
+                        $(`#reports-sent-${sequenceId}`).text(report.sent);
+                        $(`#reports-unsubscribed-${sequenceId}`).text(report.unsubscribed);
+                        $(`#reports-softbounce-${sequenceId}`).text(report.softbounce);
+                        $(`#reports-hardbounce-${sequenceId}`).text(report.hardbounce);
+                        $(`#reports-unopened-${sequenceId}`).text(report.unopened);
+
+                        // Show reports section if there are any logs
+                        if (report.total > 0) {
+                            $(`#reports-${sequenceId}`).show();
+                        }
+
+                        // Update status display (e.g., "2 running, 2 done")
+                        const pendingCount = report.total - report.sent - report.unsubscribed - report
+                            .softbounce - report
+                            .hardbounce;
+                        const statusText = `${report.sent} done, ${pendingCount} running/pending`;
+                        $(`#sequence-status-${sequenceId}`).text(statusText);
+                    })
+                    .catch(error => {
+                        console.error('Failed to fetch reports:', error);
+                    });
+            }
+
+            // Poll reports every 5 seconds for running sequences
+            function startReportsPolling(sequenceId, setId) {
+                if (!sequenceId || !setId) {
+                    console.error('Invalid sequenceId or setId for polling:', sequenceId, setId);
+                    return;
+                }
+                const interval = setInterval(() => {
+                    axios.get(`/drift/sequences/${sequenceId}`)
+                        .then(response => {
+                            const sequence = response.data.sequence;
+                            if (['running', 'scheduled', 'paused'].includes(sequence.status)) {
+                                fetchReports(sequenceId); // Loader handled here
+                            } else {
+                                clearInterval(
+                                    interval); // Stop polling if sequence is completed or cancelled
+                                fetchReports(sequenceId); // Final update with loader
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Failed to check sequence status:', error);
+                            clearInterval(interval);
+                        });
+                }, 5000);
+            }
+            // Add status display to sequence content
+            $(document).on('click', '.nav-tabs .nav-link', function() {
+                const sequenceId = $(this).closest('.tab-pane').data('sequence');
+                const setId = $(this).closest('.tab-pane').data('set');
+                if (sequenceId && setId) {
+                    // Add status element if not present
+                    if (!$(`#sequence-status-${sequenceId}`).length) {
+                        $(`#sequence-${setId}-${$(this).data('tab-index')}`).prepend(
+                            `<div id="sequence-status-${sequenceId}" class="alert alert-info mb-3"></div>`
+                        );
+                    }
+                    fetchReports(sequenceId);
+                    startReportsPolling(sequenceId, setId);
+                }
+            });
+
+            // Initialize reports for active sequence on page load
+            $(document).ready(function() {
+                const activeSequence = $('.tab-pane.active.drift-sequence-box');
+                if (activeSequence.length) {
+                    const sequenceId = activeSequence.data('sequence');
+                    const setId = activeSequence.data('set');
+                    fetchReports(sequenceId);
+                    startReportsPolling(sequenceId, setId);
+                }
+            });
+
+            $(document).on('click', '.view-replied-emails', function() {
+                const sequenceId = String($(this).data('sequence'));
+                $('#replied-emails-content').empty();
+                $('#replied-emails-loading').show();
+                $('#repliedEmailsModal').modal('show');
+
+                axios.get(`/drift/reports/${sequenceId}`)
+                    .then(response => {
+                        $('#replied-emails-loading').hide();
+                        const data = response.data || {};
+                        const repliedEmails = (data.replied && Array.isArray(data.replied.emails)) ?
+                            data.replied.emails : [];
+
+                        if (repliedEmails.length === 0) {
+                            $('#replied-emails-content').html(
+                                '<p class="text-info">No replied emails found.</p>'
+                            );
+                            return;
+                        }
+
+                        let content = '';
+                        repliedEmails.forEach(email => {
+                            const senderEmail = (typeof email === 'object' && email
+                                .account_email) ? email.account_email : 'Unknown';
+                            const receiverEmail = (typeof email === 'object' && email
+                                .subscriber_email) ? email.subscriber_email : (
+                                typeof email === 'string' ? email : 'Unknown');
+
+                            content += `
+                    <div class="email-pair p-2 border-bottom text-muted">
+                        <span class="text-primary">${senderEmail}</span>
+                        <span class="mx-2">→</span>
+                        <span class="text-success">${receiverEmail}</span>
+                    </div>
+                `;
+                        });
+
+                        $('#replied-emails-content').html(content);
+                    })
+                    .catch(error => {
+                        console.error('Failed to fetch replied emails:', error);
+                        $('#replied-emails-loading').hide();
+                        $('#replied-emails-content').html(
+                            '<p class="text-danger">Failed to load replied emails.</p>'
+                        );
+                    });
+            });
+            fetchSequences();
+        });
+    </script>
+@endsection

@@ -1,0 +1,159 @@
+#uploadProgressContainer {
+    display: none;
+    vertical-align: middle;
+}
+
+.upload-progress {
+    height: 8px;
+    border-radius: 4px;
+    background-color: #e0e0e0;
+    overflow: hidden;
+    position: relative;
+}
+
+.upload-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #289fa7, #34c6d0);
+    transition: width 0.3s ease;
+}
+
+.upload-progress-text {
+    font-size: 12px;
+    color: #6c757d;
+    margin-top: 2px;
+    text-align: center;
+}
+
+.mapping-container {
+    margin-top: 20px;
+    padding: 20px;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.mapping-row {
+    display: flex;
+    gap: 20px;
+    max-height: 500px;
+}
+
+.sync-scroll-container {
+    flex: 2;
+    overflow-y: auto;
+    max-height: 450px;
+    display: flex;
+    flex-direction: row;
+}
+
+.panel {
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+}
+
+.table-panel,
+.mapped-panel {
+    flex: 1;
+    min-width: 0;
+}
+
+.unmapped-panel {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 450px;
+}
+
+.panel-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+    padding-bottom: 5px;
+}
+
+.table-column-item {
+    padding: 10px;
+    margin: 5px 0;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #555;
+    height: 60px;
+    display: flex;
+    align-items: center;
+}
+
+.mapped-item {
+    padding: 10px;
+    margin: 5px 0;
+    background: #e6f3ff;
+    border: 1px dashed #007bff;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: grab;
+    transition: background 0.2s;
+    height: 60px;
+}
+
+.mapped-item:hover {
+    background: #cce5ff;
+}
+
+.unmapped-item {
+    padding: 10px;
+    margin: 5px 0;
+    background: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    cursor: grab;
+    transition: background 0.2s;
+}
+
+.unmapped-item:hover {
+    background: #e0e0e0;
+}
+
+.drop-zone {
+    min-height: 40px;
+    padding: 10px;
+    border: 2px dashed #ccc;
+    border-radius: 4px;
+    background: #fafafa;
+    text-align: center;
+    color: #888;
+    font-size: 14px;
+    margin: 5px 0;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.drop-zone.dragover {
+    border-color: #007bff;
+    background: #e6f3ff;
+}
+
+.remove-btn {
+    background: none;
+    border: none;
+    color: #dc3545;
+    font-size: 14px;
+    cursor: pointer;
+    padding: 0 5px;
+}
+
+.remove-btn:hover {
+    color: #b02a37;
+}
+#chunkSizeRecommendation {
+    font-size: 12px;
+    color: #6c757d;
+    margin-top: 5px;
+}

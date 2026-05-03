@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Axios Functionality Demo</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- SweetAlert2 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- cssToast CSS (adjust path as needed) -->
+    <link href="/skeleton/libs/toasts/cssToast.min.css" rel="stylesheet">
+    <style>
+        .progress-container { margin-top: 10px; }
+        .log-container {
+            border: 1px solid #ddd;
+            padding: 10px;
+            height: 200px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+        .section { margin-bottom: 30px; }
+        .btn-spacing { margin-right: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4">Axios Functionality Demo with General Class</h1>
+
+        <!-- Log Output Section -->
+        <div class="section">
+            <h3>Logs</h3>
+            <div id="log-container" class="log-container"></div>
+        </div>
+
+        <!-- Basic Axios Request Section -->
+        <div class="section">
+            <h3>Basic Axios Request</h3>
+            <p>Test a simple GET or POST request with retry handling.</p>
+            <button class="btn btn-primary btn-spacing" onclick="makeGetRequest()">Make GET Request</button>
+            <button class="btn btn-primary btn-spacing" onclick="makePostRequest()">Make POST Request</button>
+            <div id="basic-request-progress" class="progress-container d-none">
+                <div class="progress">
+                    <div id="basic-progress-bar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                </div>
+            </div>
+            <div id="basic-request-result" class="mt-2"></div>
+        </div>
+
+        <!-- File Upload Section -->
+        <div class="section">
+            <h3>File Upload</h3>
+            <p>Upload a file with progress tracking and cancellation.</p>
+            <input type="file" id="upload-file" class="form-control mb-2" style="width: 300px;">
+            <button class="btn btn-success btn-spacing" onclick="uploadFile()">Upload File</button>
+            <button class="btn btn-danger btn-spacing" onclick="cancelUpload()" disabled id="cancel-upload-btn">Cancel Upload</button>
+            <div id="upload-progress" class="progress-container d-none">
+                <div class="progress">
+                    <div id="upload-progress-bar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                </div>
+            </div>
+            <div id="upload-result" class="mt-2"></div>
+        </div>
+
+        <!-- File Download Section -->
+        <div class="section">
+            <h3>File Download</h3>
+            <p>Download a file with progress tracking.</p>
+            <button class="btn btn-success btn-spacing" onclick="downloadFile()">Download File</button>
+            <div id="download-progress" class="progress-container d-none">
+                <div class="progress">
+                    <div id="download-progress-bar" class="progress-bar" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                </div>
+            </div>
+            <div id="download-result" class="mt-2"></div>
+        </div>
+
+        <!-- Polling Section -->
+        <div class="section">
+            <h3>Polling</h3>
+            <p>Start and stop polling an endpoint for updates.</p>
+            <button class="btn btn-primary btn-spacing" onclick="startPolling()">Start Polling</button>
+            <button class="btn btn-danger btn-spacing" onclick="stopPolling()" disabled id="stop-polling-btn">Stop Polling</button>
+            <div id="polling-result" class="mt-2"></div>
+        </div>
+
+        <!-- Confetti Trigger (Addon Example) -->
+        <div class="section">
+            <h3>Addon: Confetti</h3>
+            <p>Trigger a confetti effect (example of General addon).</p>
+            <button class="btn btn-info" data-confetti>Trigger Confetti</button>
+        </div>
+
+        <!-- SweetAlert2 Confirmation (Addon Example) -->
+        <div class="section">
+            <h3>Addon: SweetAlert2 Confirmation</h3>
+            <p>Test SweetAlert2 confirmation dialog.</p>
+            <button class="btn btn-warning" data-sweetalert-confirm="Confirm this action?">Test Confirmation</button>
+        </div>
+    </div>
+
+    <!-- JavaScript Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.4.0/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.js"></script>
+    <!-- cssToast JS (adjust path as needed) -->
+    <script src="/skeleton/libs/toasts/cssToast.min.js"></script>
+    <!-- General JS (ensure correct path) -->
+    <script defer src="/js/general/index.js"></script>
+
+    <script>
+        // Utility to log messages to the UI
+        function logToUI(message) {
+            const logContainer = document.getElementById('log-container');
+            const logEntry = document.createElement('div');
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+            // Keep only last 50 logs to prevent overflow
+            while (logContainer.childNodes.length > 50) {
+                logContainer.removeChild(logContainer.firstChild);
+            }
+        }
+
+        // Basic GET Request
+        async function makeGetRequest() {
+            try {
+                const progressBar = document.getElementById('basic-progress-bar');
+                const progressContainer = document.getElementById('basic-request-progress');
+                const resultContainer = document.getElementById('basic-request-result');
+                progressContainer.classList.remove('d-none');
+                progressBar.style.width = '0%';
+                progressBar.textContent = '0%';
+
+                const response = await window.general.axiosRequest({
+                    method: 'get',
+                    url: 'https://jsonplaceholder.typicode.com/posts/1', // Example API
+                    requestId: 'get-request',
+                    onProgress: ({ percent }) => {
+                        progressBar.style.width = `${percent}%`;
+                        progressBar.textContent = `${percent}%`;
+                        logToUI(`GET Request Progress: ${percent}%`);
+                    }
+                });
+                resultContainer.innerHTML = `<pre>${JSON.stringify(response.data, null, 2)}</pre>`;
+                logToUI('GET Request Successful');
+            } catch (e) {
+                window.general.errorToast('GET Request Failed', e.message);
+                logToUI(`GET Request Error: ${e.message}`);
+            } finally {
+                document.getElementById('basic-request-progress').classList.add('d-none');
+            }
+        }
+
+        // Basic POST Request
+        async function makePostRequest() {
+            try {
+                const progressBar = document.getElementById('basic-progress-bar');
+                const progressContainer = document.getElementById('basic-request-progress');
+                const resultContainer = document.getElementById('basic-request-result');
+                progressContainer.classList.remove('d-none');
+                progressBar.style.width = '0%';
+                progressBar.textContent = '0%';
+
+                const response = await window.general.axiosRequest({
+                    method: 'post',
+                    url: 'https://jsonplaceholder.typicode.com/posts', // Example API
+                    data: { title: 'Test Post', body: 'This is a test', userId: 1 },
+                    requestId: 'post-request',
+                    onProgress: ({ percent }) => {
+                        progressBar.style.width = `${percent}%`;
+                        progressBar.textContent = `${percent}%`;
+                        logToUI(`POST Request Progress: ${percent}%`);
+                    }
+                });
+                resultContainer.innerHTML = `<pre>${JSON.stringify(response.data, null, 2)}</pre>`;
+                logToUI('POST Request Successful');
+            } catch (e) {
+                window.general.errorToast('POST Request Failed', e.message);
+                logToUI(`POST Request Error: ${e.message}`);
+            } finally {
+                document.getElementById('basic-request-progress').classList.add('d-none');
+            }
+        }
+
+        // File Upload with Cancellation
+        let uploadCancelToken = null;
+        async function uploadFile() {
+            try {
+                const fileInput = document.getElementById('upload-file');
+                const file = fileInput.files[0];
+                if (!file) {
+                    window.general.warningToast('No File', 'Please select a file to upload');
+                    return;
+                }
+                const progressBar = document.getElementById('upload-progress-bar');
+                const progressContainer = document.getElementById('upload-progress');
+                const resultContainer = document.getElementById('upload-result');
+                const cancelBtn = document.getElementById('cancel-upload-btn');
+                progressContainer.classList.remove('d-none');
+                progressBar.style.width = '0%';
+                progressBar.textContent = '0%';
+                cancelBtn.disabled = false;
+
+                const response = await window.general.uploadFile({
+                    url: '/api/upload', // Replace with your upload endpoint
+                    file,
+                    requestId: 'file-upload',
+                    additionalData: { description: 'Test upload' },
+                    onProgress: ({ percent }) => {
+                        progressBar.style.width = `${percent}%`;
+                        progressBar.textContent = `${percent}%`;
+                        logToUI(`Upload Progress: ${percent}%`);
+                    }
+                });
+                resultContainer.textContent = `Upload successful: ${JSON.stringify(response.data)}`;
+                logToUI('File Upload Successful');
+            } catch (e) {
+                if (axios.isCancel(e)) {
+                    window.general.warningToast('Upload Canceled', 'File upload was canceled');
+                    logToUI('File Upload Canceled');
+                } else {
+                    window.general.errorToast('Upload Failed', e.message);
+                    logToUI(`Upload Error: ${e.message}`);
+                }
+            } finally {
+                document.getElementById('upload-progress').classList.add('d-none');
+                document.getElementById('cancel-upload-btn').disabled = true;
+                uploadCancelToken = null;
+            }
+        }
+
+        function cancelUpload() {
+            if (uploadCancelToken) {
+                uploadCancelToken.cancel('Upload canceled by user');
+                logToUI('Cancel Upload Requested');
+            }
+        }
+
+        // File Download
+        async function downloadFile() {
+            try {
+                const progressBar = document.getElementById('download-progress-bar');
+                const progressContainer = document.getElementById('download-progress');
+                const resultContainer = document.getElementById('download-result');
+                progressContainer.classList.remove('d-none');
+                progressBar.style.width = '0%';
+                progressBar.textContent = '0%';
+
+                await window.general.downloadFile({
+                    url: '/api/download/sample.pdf', // Replace with your download endpoint
+                    requestId: 'file-download',
+                    fileName: 'sample.pdf',
+                    onProgress: ({ percent }) => {
+                        progressBar.style.width = `${percent}%`;
+                        progressBar.textContent = `${percent}%`;
+                        logToUI(`Download Progress: ${percent}%`);
+                    }
+                });
+                resultContainer.textContent = 'Download initiated';
+                logToUI('File Download Initiated');
+            } catch (e) {
+                window.general.errorToast('Download Failed', e.message);
+                logToUI(`Download Error: ${e.message}`);
+            } finally {
+                document.getElementById('download-progress').classList.add('d-none');
+            }
+        }
+
+        // Polling
+        let pollingId = null;
+        async function startPolling() {
+            try {
+                const resultContainer = document.getElementById('polling-result');
+                const stopBtn = document.getElementById('stop-polling-btn');
+                stopBtn.disabled = false;
+
+                pollingId = window.general.startPolling({
+                    url: 'https://jsonplaceholder.typicode.com/todos/1', // Example API
+                    requestId: 'polling-test',
+                    interval: 5000,
+                    onUpdate: (data) => {
+                        resultContainer.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+                        logToUI('Polling Update Received');
+                    },
+                    maxAttempts: 5
+                });
+                logToUI(`Polling Started: ${pollingId}`);
+            } catch (e) {
+                window.general.errorToast('Polling Failed', e.message);
+                logToUI(`Polling Error: ${e.message}`);
+                document.getElementById('stop-polling-btn').disabled = true;
+            }
+        }
+
+        function stopPolling() {
+            if (pollingId) {
+                window.general.stopPolling(pollingId);
+                logToUI(`Polling Stopped: ${pollingId}`);
+                document.getElementById('polling-result').textContent = 'Polling stopped';
+                document.getElementById('stop-polling-btn').disabled = true;
+                pollingId = null;
+            }
+        }
+
+        // Initialize General Dependency Check
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!window.general) {
+                console.error('General class not loaded');
+                logToUI('Error: General class not loaded');
+                return;
+            }
+            window.general.log('Axios demo page loaded');
+            logToUI('Axios Demo Page Loaded');
+        });
+    </script>
+</body>
+</html>

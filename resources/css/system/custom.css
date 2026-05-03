@@ -1,0 +1,132 @@
+.mapping-column-pill {
+        width: 100%;
+        height: 38px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 16px;
+        cursor: move;
+        transition: all 0.2s ease;
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 8px;
+    }
+    .mapped-pill {
+        background: url('../../../public/imports/mapped.svg') no-repeat center center;
+        background-size: cover;
+    }
+
+    .unmapped-pill {
+        background: url('../../../public/imports/unmapped.svg') no-repeat center center;
+        background-size: cover;
+    }
+    .forced-pill {
+        background: url('../../../public/imports/forced.svg') no-repeat center center;
+        background-size: cover;
+    }
+    .column-text {
+        font-weight: 500;
+        font-size: 0.9rem;
+        color: #2a405e;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 70%;
+        position: relative;
+        z-index: 1;
+    }
+    .mapping-dropzone {
+        min-height: 45px;
+        padding: 8px;
+        border-radius: 8px;
+    }
+    .empty-slot {
+        border: 2px dashed #d1d5db;
+        background-color: #f9fafb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .empty-placeholder {
+        color: #6b7280;
+        font-style: italic;
+    }
+    #unmatched-list,#column-targets{
+       max-height: 600px; 
+       overflow-y: auto;
+       scrollbar-width: thin;           /* Firefox */
+       scrollbar-color: transparent transparent; /* Firefox */
+
+    }
+    .dropdown-menu-import{
+        width: 350px;
+    }
+    .import-progress-container {
+    padding: 0.75rem;
+    background-color: #f8f9fa;
+    border-radius: 0.5rem;
+    border: 1px solid #e9ecef;
+    }
+
+    .import-title {
+        font-weight: 500;
+        font-size: 0.85rem;
+    }
+
+    .import-status {
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    .import-percent {
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .import-message {
+        font-size: 0.75rem;
+        margin-bottom: 0.5rem;
+        border-radius: 0.25rem;
+    }
+
+    .progress-bar-animated {
+        animation: progress-bar-stripes 1s linear infinite;
+    }
+
+    @keyframes progress-bar-stripes {
+        0% { background-position-x: 1rem; }
+    }
+
+    .page-breadcrumb {
+        padding: 15px 15px 10px 15px;
+        border-radius: 0.5rem;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 1) 0%, rgba(240, 240, 240, 1) 100%);
+    }
+
+    /* Live time container */
+    .live-time-container {
+        display: flex;
+        align-items: center; /* vertically center icon + text */
+        gap: 6px; /* space between icon and time */
+        font-size: 14px; /* adjust size */
+        color: #333; /* text color */
+        background: #ffffffff; /* light background */
+        padding: 10px;
+        border-radius: 8px; /* rounded corners */
+        margin-top: 5px;
+    }
+
+    /* Clock icon */
+    .live-time-icon i {
+        font-size: 16px; /* slightly bigger than text */
+        color: #555; /* icon color */
+    }
+
+    /* Time text */
+    .live-time {
+        font-weight: 500;
+        font-size: 14px;
+        color: #222;
+    }
+
