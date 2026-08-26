@@ -1,0 +1,94 @@
+﻿[dotenv@17.2.3] injecting env (45) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+
+🔍 Verifying master_leads collection...
+📦 Database: sun
+🔗 URI: mongodb://localhost:27017/pluto
+
+═══════════════════════════════════════════
+  📋 INDEXES ON master_leads
+═══════════════════════════════════════════
+      _id_                                {"_id":1} 
+      idx_email                           {"email":1} 
+  🔒 UNIQUE id_unique                           {"id":1} sparse
+  🔒 UNIQUE email_unique                        {"email":1} sparse
+      li_company_name_idx                 {"li_company_name":1} 
+      li_full_name_idx                    {"li_full_name":1} 
+      li_smtp_idx                         {"li_smtp":1} 
+      created_at_idx                      {"created_at":1} 
+      li_middle_name_idx                  {"li_middle_name":1} 
+      li_last_name_idx                    {"li_last_name":1} 
+      dls_designation_idx                 {"dls_designation":1} 
+      li_company_id_idx                   {"li_company_id":1} 
+      need_to_action_idx                  {"need_to_action":1} 
+      li_job_title_idx                    {"li_job_title":1} 
+      li_contact_country_idx              {"li_contact_country":1} 
+      li_first_name_idx                   {"li_first_name":1} 
+      li_first_name_initial_idx           {"li_first_name_initial":1} 
+      li_last_name_initial_idx            {"li_last_name_initial":1} 
+      dls_managementlevel_idx             {"dls_managementlevel":1} 
+      dls_jobfunction_idx                 {"dls_jobfunction":1} 
+      li_contact_location_idx             {"li_contact_location":1} 
+      ap_full_name_idx                    {"ap_full_name":1} 
+      ap_contact_country_idx              {"ap_contact_country":1} 
+      last_contact_date_idx               {"last_contact_date":1} 
+      deleted_at_idx                      {"deleted_at":1} sparse
+      idx_deleted_email                   {"deleted_at":1,"email":1} sparse
+      idx_deleted_company_name            {"deleted_at":1,"li_company_name":1} sparse
+      idx_deleted_full_name               {"deleted_at":1,"li_full_name":1} sparse
+      idx_deleted_job_title               {"deleted_at":1,"li_job_title":1} sparse
+      idx_deleted_designation             {"deleted_at":1,"dls_designation":1} sparse
+      idx_deleted_created                 {"deleted_at":1,"created_at":-1} sparse
+      idx_deleted_id_desc                 {"deleted_at":1,"_id":-1} sparse
+      idx_text_search                     {"_fts":"text","_ftsx":1} 
+      idx_deleted_company_created         {"deleted_at":1,"li_company_name":1,"created_at":-1} sparse
+      idx_deleted_email_id                {"deleted_at":1,"email":1,"_id":-1} sparse
+      idx_deleted_smtp_id                 {"deleted_at":1,"li_smtp":1,"_id":-1} sparse
+      idx_deleted_jobtitle_created        {"deleted_at":1,"li_job_title":1,"created_at":-1} sparse
+      idx_deleted_industry_created        {"deleted_at":1,"li_contact_industry":1,"created_at":-1} sparse
+      idx_deleted_status_id               {"deleted_at":1,"dls_mail_send_status":1,"_id":-1} sparse
+      idx_deleted_created_id              {"deleted_at":1,"created_at":-1,"_id":-1} sparse
+      idx_deleted_updated_id              {"deleted_at":1,"updated_at":-1,"_id":-1} sparse
+
+  Total indexes: 41
+
+═══════════════════════════════════════════
+  📊 DATA QUALITY CHECK
+═══════════════════════════════════════════
+  Total documents: 2,50,000
+  Mangled id (contains __): 2,50,000 ❌
+  Mangled email (contains __): 2,50,000 ❌
+  Has id_original field: 2,50,000 ❌
+  Has email_original field: 2,50,000 ❌
+
+  ID type distribution:
+    string: 2,50,000
+
+═══════════════════════════════════════════
+  🔎 SAMPLE RECORDS (last 3 inserted)
+═══════════════════════════════════════════
+
+  _id: 6993329813c554f69683932d
+  id: 992499__mlpave5tor1u9c5b0__250000 (string)
+  email: nowings@apexsystems.com__mlpave5tor1u9c5b0__250000
+  li_company_name: Apex Systems
+  ⚠️ id_original: 992499
+  ⚠️ email_original: nowings@apexsystems.com
+
+  _id: 6993329813c554f69683932c
+  id: 992498__mlpave5tor1u9c5b0__249999 (string)
+  email: ryan.cammarata@fidelity.com__mlpave5tor1u9c5b0__249999
+  li_company_name: Fidelity Investments
+  ⚠️ id_original: 992498
+  ⚠️ email_original: ryan.cammarata@fidelity.com
+
+  _id: 6993329813c554f69683932b
+  id: 992497__mlpave5tor1u9c5b0__249998 (string)
+  email: cmodgling@apexsystems.com__mlpave5tor1u9c5b0__249998
+  li_company_name: Apex Systems
+  ⚠️ id_original: 992497
+  ⚠️ email_original: cmodgling@apexsystems.com
+
+═══════════════════════════════════════════
+  ✅ VERIFICATION COMPLETE
+═══════════════════════════════════════════
+

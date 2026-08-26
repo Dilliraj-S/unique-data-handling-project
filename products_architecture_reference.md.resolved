@@ -1,0 +1,572 @@
+# Products Module — Complete Architecture Reference
+
+> This document covers the entire Products module end-to-end: database design, data storage approach, controller logic, view rendering, token-based routing, and all interactive flows. Use this as a blueprint for implementing a similar module in another project.
+
+---
+
+## 1. Database Design
+
+### 1.1 Tables Overview
+
+```mermaid
+erDiagram
+    products {
+        
+        int id PK
+        string product_id UK "Unique product identifier"
+        string product_name "Display name"
+        string pp_name "Company SMTP - links to master_accounts li_smtp"
+        int pp_id FK "Links to master_accounts id"
+        text contacts "CSV of master_leads IDs e.g. 1-5-12-99"
+        text companies "CSV of master_accounts IDs e.g. 101-205"
+        int contacts_count "Pre-computed count"
+        int companies_count "Pre-computed count"
+        int status "1 Active or 0 Inactive"
+        timestamp deleted_at "Soft delete"
+    }
+
+    sun_master_accounts {
+        int id PK
+        string li_company_id UK "LinkedIn company ID"
+        string li_smtp "Company domain and SMTP"
+        string li_company_name "Company name"
+        string li_tag_line "Company tagline"
+        string li_logo "Logo URL"
+        string li_banner "Banner URL"
+        string li_company_industry "Industry"
+        string li_company_headquarters "HQ location"
+        string li_company_founded "Founded year"
+        string li_type "Company type"
+        string li_company_specialties "Specialties"
+        string li_website "Website URL"
+        text li_company_description "About text"
+        string employees_on_linked_in "Employee count"
+        int need_to_action "0 Needs action or 1 Actioned"
+        timestamp deleted_at "Soft delete"
+    }
+
+    sun_master_leads {
+        int id PK
+        string li_company_id FK "Links to master_accounts li_company_id"
+        string li_smtp "Company domain same as master_accounts li_smtp"
+        string li_company_name "Company name"
+        string email "Lead email"
+        int need_to_action "0 Needs action or 1 Actioned"
+        timestamp deleted_at "Soft delete"
+    }
+
+    products ||--o{ sun_master_accounts : "pp_name equals li_smtp"
+    products }o--o{ sun_master_leads : "contacts CSV maps to id"
+    products }o--o{ sun_master_accounts : "companies CSV maps to id"
+    sun_master_accounts ||--o{ sun_master_leads : "li_company_id"
+```
+
+### 1.2 How the Tables Connect
+
+| Relationship | Link Field | Description |
+|:---|:---|:---|
+| Product → Company | `products.pp_name = sun.master_accounts.li_smtp` | Every product belongs to a company, linked via SMTP domain |
+| Product → Contacts | `products.contacts` (CSV) → `sun.master_leads.id` | Contacts stored as comma-separated IDs |
+| Product → Companies | `products.companies` (CSV) → `sun.master_accounts.id` | Companies stored as comma-separated IDs |
+| Lead → Company | `sun.master_leads.li_company_id = sun.master_accounts.li_company_id` | Each lead belongs to a company |
+
+---
+
+## 2. How Companies and Contacts IDs Are Stored
+
+### 2.1 The CSV Approach (Current Implementation)
+
+The `products` table stores associated contacts and companies as **comma-separated ID strings**:
+
+```
+products row example:
+┌─────────────┬──────────────┬────────────────┬──────────────────┬───────────┐
+│ product_id  │ product_name │ pp_name        │ contacts         │ companies │
+├─────────────┼──────────────┼────────────────┼──────────────────┼───────────┤
+│ 123         │ Salesforce   │ salesforce.com │ 1,5,12,99,204    │ 101,205   │
+│ 456         │ HubSpot      │ hubspot.com    │ 3,7,15           │ 102,308   │
+└─────────────┴──────────────┴────────────────┴──────────────────┴───────────┘
+```
+
+### 2.2 How the Backend Reads CSV IDs
+
+When fetching contacts for a product, the controller:
+
+```php
+// 1. Get the CSV string from products table
+$productContacts = DB::table('products')
+    ->where('product_id', $productId)
+    ->pluck('contacts')                          // → Collection: ["1,5,12,99,204"]
+    ->flatMap(function ($contactString) {
+        return array_map('intval', explode(',', $contactString));
+    })                                           // → [1, 5, 12, 99, 204]
+    ->filter()                                   // Remove zeros/empty
+    ->unique()                                   // Remove duplicates
+    ->values()
+    ->toArray();                                 // → [1, 5, 12, 99, 204]
+
+// 2. Use IN query to fetch the actual records
+$conditions[] = [
+    'column'   => 'sun.master_leads.id',
+    'operator' => 'IN',
+    'value'    => $productContacts
+];
+```
+
+Same pattern for companies:
+
+```php
+$productCompanies = DB::table('products')
+    ->where('product_id', $productId)
+    ->pluck('companies')                         // → Collection: ["101,205"]
+    ->flatMap(function ($companyString) {
+        return array_map('intval', explode(',', $companyString));
+    })
+    ->filter()->unique()->values()->toArray();   // → [101, 205]
+
+$conditions[] = [
+    'column'   => 'sun.master_accounts.id',
+    'operator' => 'IN',
+    'value'    => $productCompanies
+];
+```
+
+### 2.3 Pros and Cons of CSV Storage
+
+| Pros | Cons |
+|:---|:---|
+| Simple — no extra junction table needed | Cannot use foreign key constraints |
+| Fast reads for small lists | Slow for very large lists (thousands of IDs) |
+| Single query to get all IDs | Cannot JOIN directly — need 2-step query |
+| Easy to update (just append or remove from string) | Hard to query in reverse ("which products have contact 5?") |
+
+### 2.4 Alternative Approach: Junction Table (Best Practice)
+
+For a new project, consider using proper junction/pivot tables:
+
+```sql
+-- Junction table for product to contacts
+CREATE TABLE product_contacts (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    product_id  VARCHAR(50) NOT NULL,
+    contact_id  INT NOT NULL,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES products(product_id),
+    FOREIGN KEY (contact_id) REFERENCES sun.master_leads(id),
+    UNIQUE KEY (product_id, contact_id)
+);
+
+-- Junction table for product to companies
+CREATE TABLE product_companies (
+    id          INT AUTO_INCREMENT PRIMARY KEY,
+    product_id  VARCHAR(50) NOT NULL,
+    company_id  INT NOT NULL,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES products(product_id),
+    FOREIGN KEY (company_id) REFERENCES sun.master_accounts(id),
+    UNIQUE KEY (product_id, company_id)
+);
+```
+
+Then the query becomes a simple JOIN instead of CSV parsing:
+
+```php
+// With junction table — single clean query
+$contacts = DB::table('sun.master_leads')
+    ->join('product_contacts', 'sun.master_leads.id', '=', 'product_contacts.contact_id')
+    ->where('product_contacts.product_id', $productId)
+    ->get();
+```
+
+---
+
+## 3. Token-Based Routing System
+
+### 3.1 How Tokens Work
+
+Every data table in the UI is identified by a **skeleton token**. The token tells the backend which table to query and which controller logic to run.
+
+```
+Token Format: {system}_{module}_{resource}_{suffix}_{id}
+
+Examples:
+  central_unique_products_t          → Table view of all products
+  central_unique_products_t_5        → Table filtered by pp_id=5
+  central_unique_products_a          → Add product form
+  central_product_contacts_t_123     → Contacts for product_id=123
+  central_product_companies_t_123    → Companies for product_id=123
+  central_sun_master_accounts_t_456  → Accounts filtered by li_company_id=456
+  central_sun_clients_t_456          → Clients filtered by li_company_id=456
+```
+
+**Suffixes:**
+- `_t` = Table data fetch
+- `_a` = Add form
+- `_as` = Add form submit
+- `_e` = Edit form
+- `_es` = Edit form submit
+- `_v` = View record
+- `_f` = Custom form action
+
+### 3.2 Token Resolution Flow
+
+```mermaid
+sequenceDiagram
+    participant View as Blade View
+    participant JS as Skeleton JS
+    participant Route as skeleton-action route
+    participant SRC as SystemRouteController
+    participant Skel as SkeletonService
+    participant Ctrl as TableCtrl or NavCtrl
+    participant DB as Database
+
+    View->>JS: data-skeleton-table-set with token_t
+    JS->>Route: POST skeleton-action with token
+    Route->>SRC: dispatch request and token
+    SRC->>Skel: resolveToken with token
+    Skel-->>SRC: reqSet with table and key and module and id
+    SRC->>Ctrl: index with request and params
+    Ctrl->>DB: Query based on reqSet key
+    DB-->>Ctrl: Raw data
+    Ctrl-->>JS: JSON with data and recordsTotal and columns
+    JS-->>View: Render table rows
+```
+
+---
+
+## 4. Controller Logic — Complete Breakdown
+
+### 4.1 NavCtrl — Page Navigation
+
+**File**: [app/Http/Controllers/System/Central/Filters/NavCtrl.php](file:///c:/edit/bv/app/Http/Controllers/System/Central/Filters/NavCtrl.php)  
+**Role**: Assembles data for page views. Does NOT return JSON — returns rendered Blade views.
+
+#### Case: `search.product_tables` (Product Detail Page)
+
+Two entry paths:
+
+**Path A — via `?product_id=123`:**
+```
+1. Query `products` WHERE product_id = 123
+   → Gets: product_name, pp_name, contacts (CSV), companies (CSV)
+
+2. Query `sun.master_accounts` WHERE li_smtp = products.pp_name
+   → Gets: company details (logo, name, industry, HQ, etc.)
+
+3. Count contacts = count(explode(',', product.contacts))
+   → e.g., "1,5,12,99" → 4 contacts
+
+4. Query `products` WHERE pp_name = company.li_smtp
+   → Gets: all related products (technologies count)
+
+5. Set is_product_view = true (label shows "Contacts")
+
+6. Return view with data
+```
+
+**Path B — via `?li_company_id=456`:**
+```
+1. Query `sun.master_accounts` WHERE li_company_id = 456
+   → Gets: company details + li_smtp
+
+2. Count leads in `sun.master_leads` WHERE li_smtp = company.li_smtp
+
+3. Query `products` WHERE pp_name = company.li_smtp
+   → Gets: related products
+
+4. Set is_product_view = false (label shows "Leads")
+
+5. Return view with data
+```
+
+#### Case: `search.related_products`
+
+```
+1. Query `sun.master_accounts` WHERE id = pp_id
+   → Gets: li_smtp, li_company_name
+
+2. Query `products` WHERE pp_name = company.li_smtp
+   → Gets: all products for this company
+
+3. Return view with data
+```
+
+### 4.2 TableCtrl — AJAX Table Data
+
+**File**: [app/Http/Controllers/System/Central/Filters/TableCtrl.php](file:///c:/edit/bv/app/Http/Controllers/System/Central/Filters/TableCtrl.php)  
+**Role**: Returns JSON data for skeleton tables. Handles pagination, search, sort, filtering.
+
+| Case Key | Table Queried | How It Filters | What It Returns |
+|:---|:---|:---|:---|
+| `central_unique_products` | `products` | Optional: `pp_id = id from token` | All products with clickable product_name, contacts_count, companies_count |
+| `central_product_contacts` | `sun.master_leads` | `id IN (products.contacts CSV)` | Contacts for a specific product |
+| `central_product_companies` | `sun.master_accounts` | `id IN (products.companies CSV)` OR `li_company_id = value` | Companies for a specific product |
+| `central_sun_master_accounts` | `sun.master_accounts` | `li_company_id = id from token` | Companies filtered by company ID |
+| `central_sun_clients` | `sun.master_leads` or clients view | `li_company_id = id from token` | Clients/contacts for a specific company |
+| `central_sun_master_leads` | `sun.master_leads` | `li_company_id = id from token` | Leads for a specific company |
+
+#### Custom Column Transformations
+
+TableCtrl uses `custom` array to modify how columns display:
+
+```php
+// Make product_name a clickable link
+[
+    'type'       => 'modify',
+    'column'     => 'product_name',
+    'view'       => '<a href="/filters/search/product_tables?product_id=::product_id::"
+                      class="badge bg-info">::product_name::</a>',
+    'renderHtml' => true
+]
+
+// Add a "View Contacts" button
+[
+    'type'       => 'addon',
+    'column'     => 'View Contacts',
+    'view'       => '<a href="/filters/search/clients?li_company_id=::li_company_id::"
+                      class="btn btn-sm btn-info">View Contacts</a>',
+    'renderHtml' => true
+]
+```
+
+**`::column_name::`** is a placeholder that gets replaced with the actual row value by `TableHelper::generateResponse()`.
+
+### 4.3 CustomCtrl — Single Record Fetch
+
+**File**: [app/Http/Controllers/System/Central/Filters/CustomCtrl.php](file:///c:/edit/bv/app/Http/Controllers/System/Central/Filters/CustomCtrl.php)  
+**Role**: Handles custom non-table operations.
+
+For products:
+```php
+case 'central_unique_products':
+    $product = DB::table('products')
+        ->where('product_id', $request->get('product'))
+        ->first();
+    return response()->json([
+        'rows' => $product ? [$product] : [],
+        'message' => $product ? 'Product found.' : 'Product not found.'
+    ], 200);
+```
+
+### 4.4 CardCtrl — Card View (Not Used for Products)
+
+Only handles `Filters_entities` currently. Not part of the products flow.
+
+---
+
+## 5. View Templates — Complete Breakdown
+
+### 5.1 products.blade.php (Products List)
+
+```
+Layout: system-app
+Breadcrumb: Filters → Search → Products
+
+Components:
+├── "Add Product" button
+│     data-token="central_unique_products_a"
+│     class="skeleton-popup" (opens add form via skeleton)
+│
+└── Products Table
+      data-skeleton-table-set="central_unique_products_t"
+      (auto-loaded by skeleton JS framework)
+```
+
+### 5.2 product_tables.blade.php (Product Detail)
+
+```
+Layout: system-app
+Breadcrumb: Filters → Search → Product Tables / {company_name}
+
+Components:
+├── Company Header Card
+│     ├── Banner image (static URL)
+│     ├── Company logo (from li_logo)
+│     ├── Product/Company name
+│     ├── Tagline
+│     ├── Stats: Lead/Contact count (clickable → scrolls to Contacts tab)
+│     │          Technologies count (clickable → navigates to Related Products)
+│     ├── Actions: "Show Tables" button, "Related Products" link
+│     ├── Details: Industry, HQ, Employee Size, Website, Specialties
+│     └── About section (with Read more/less toggle)
+│
+└── Tables Card (toggleable)
+      ├── Companies Tab
+      │     IF product_id → central_product_companies_t_{product_id}
+      │     IF li_company_id → central_sun_master_accounts_t_{li_company_id}
+      │
+      └── Contacts Tab
+            IF product_id → central_product_contacts_t_{product_id}
+            IF li_company_id → central_sun_clients_t_{li_company_id}
+```
+
+### 5.3 related_products.blade.php (Related Products)
+
+```
+Layout: system-app
+Breadcrumb: Filters → Search → Related Products ({company_name})
+
+Components:
+└── Related Products Table
+      data-skeleton-table-set="central_unique_products_t_{pp_id}"
+      (shows all products with same pp_name/li_smtp as the company)
+```
+
+---
+
+## 6. Complete User Journey — All Flows
+
+### Flow A: Browse Products → View Product Details → See Companies and Contacts
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ STEP 1: Products List                                          │
+│ URL: /filters/search/products                                  │
+│ Token: central_unique_products_t                               │
+│ Shows: All products in a table                                 │
+│ Click: product_name "Salesforce" (product_id=123)              │
+└────────────────────────┬────────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ STEP 2: Product Detail Page                                    │
+│ URL: /filters/search/product_tables?product_id=123             │
+│ NavCtrl: products → sun.master_accounts via pp_name=li_smtp    │
+│ Shows: Company card + Companies tab + Contacts tab             │
+│                                                                │
+│   Companies Tab (token: central_product_companies_t_123)       │
+│   → products.companies = "101,205"                             │
+│   → sun.master_accounts WHERE id IN (101, 205)                 │
+│                                                                │
+│   Contacts Tab (token: central_product_contacts_t_123)         │
+│   → products.contacts = "1,5,12,99"                            │
+│   → sun.master_leads WHERE id IN (1, 5, 12, 99)               │
+└────────────────────────┬────────────────────────────────────────┘
+                         │
+                         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ STEP 3: Related Products                                       │
+│ URL: /filters/search/related_products?pp_id={company.id}       │
+│ NavCtrl: sun.master_accounts → products via li_smtp=pp_name    │
+│ Token: central_unique_products_t_{pp_id}                       │
+│ Shows: All products that share the same company SMTP           │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Flow B: From any Company Name link → Company View
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ Click company_name link in any table                           │
+│ URL: /filters/search/product_tables?li_company_id=456          │
+│ NavCtrl: sun.master_accounts WHERE li_company_id=456           │
+│                                                                │
+│   Companies Tab: central_sun_master_accounts_t_456             │
+│   → sun.master_accounts WHERE li_company_id = 456              │
+│                                                                │
+│   Contacts Tab: central_sun_clients_t_456                      │
+│   → clients WHERE li_company_id = 456                          │
+│                                                                │
+│   Label shows "Leads" instead of "Contacts"                    │
+│   (is_product_view = false)                                    │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Flow C: From Companies tab → View a Company's Contacts
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ Click "View Contacts" button on a company row                  │
+│ URL: /filters/search/clients?li_company_id={li_company_id}     │
+│ Token: central_sun_clients_t                                   │
+│ Shows: All contacts/clients for that specific company          │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 7. Key Architecture Patterns to Reuse
+
+### Pattern 1: Token-Suffixed Dynamic IDs
+
+Append dynamic IDs to tokens for filtered views:
+```
+base_token_t          → all records
+base_token_t_123      → records filtered by ID 123
+```
+
+Backend extracts the ID:
+```php
+$parts = explode('_', $token);
+$lastPart = end($parts);
+if (is_numeric($lastPart)) {
+    $conditions[] = ['column' => 'table.id', 'operator' => '=', 'value' => $lastPart];
+}
+```
+
+### Pattern 2: Conditional Token Selection in Views
+
+Use request parameters to decide which token to render:
+```blade
+@if(request('product_id'))
+    <div data-skeleton-table-set="central_product_companies_t_{{ request('product_id') }}"></div>
+@elseif(request('li_company_id'))
+    <div data-skeleton-table-set="central_sun_master_accounts_t_{{ request('li_company_id') }}"></div>
+@endif
+```
+
+### Pattern 3: CSV → IN Query Pipeline
+
+```php
+$ids = DB::table('source_table')
+    ->where('id', $id)
+    ->pluck('csv_column')                    // Get CSV string
+    ->flatMap(fn($s) => array_map('intval', explode(',', $s)))  // Split and cast
+    ->filter()                               // Remove empty/zero
+    ->unique()                               // Deduplicate
+    ->values()
+    ->toArray();
+
+$conditions[] = ['column' => 'target.id', 'operator' => 'IN', 'value' => $ids];
+```
+
+### Pattern 4: Dual-Purpose Detail Page
+
+Same view serves two purposes based on query parameter:
+```php
+if ($companyId) {
+    // Company-centric view: show leads, label = "Leads"
+    $data['is_product_view'] = false;
+} elseif ($productId) {
+    // Product-centric view: show contacts, label = "Contacts"
+    $data['is_product_view'] = true;
+}
+```
+
+### Pattern 5: Custom Column Transformations
+
+Make any column interactive without changing the frontend table component:
+```php
+// Turn a text column into a clickable link
+['type' => 'modify', 'column' => 'name',
+ 'view' => '<a href="/detail?id=::id::">::name::</a>', 'renderHtml' => true]
+
+// Add an extra action button column
+['type' => 'addon', 'column' => 'Actions',
+ 'view' => '<button data-id="::id::">Edit</button>', 'renderHtml' => true]
+```
+
+---
+
+## 8. Files Reference
+
+| File | Path | Role |
+|:---|:---|:---|
+| Products List View | [resources/views/system/central/filters/search/products.blade.php](file:///c:/edit/bv/resources/views/system/central/filters/search/products.blade.php) | Entry page — lists all products |
+| Product Detail View | [resources/views/system/central/filters/search/product_tables.blade.php](file:///c:/edit/bv/resources/views/system/central/filters/search/product_tables.blade.php) | Company card + Companies/Contacts tabs |
+| Related Products View | [resources/views/system/central/filters/search/related_products.blade.php](file:///c:/edit/bv/resources/views/system/central/filters/search/related_products.blade.php) | Products sharing same company |
+| NavCtrl | [app/Http/Controllers/System/Central/Filters/NavCtrl.php](file:///c:/edit/bv/app/Http/Controllers/System/Central/Filters/NavCtrl.php) | Page data assembly |
+| TableCtrl | [app/Http/Controllers/System/Central/Filters/TableCtrl.php](file:///c:/edit/bv/app/Http/Controllers/System/Central/Filters/TableCtrl.php) | AJAX table data handler |
+| CustomCtrl | [app/Http/Controllers/System/Central/Filters/CustomCtrl.php](file:///c:/edit/bv/app/Http/Controllers/System/Central/Filters/CustomCtrl.php) | Custom single-record operations |
+| CardCtrl | [app/Http/Controllers/System/Central/Filters/CardCtrl.php](file:///c:/edit/bv/app/Http/Controllers/System/Central/Filters/CardCtrl.php) | Card view (not used for products) |
+| Routes | [routes/web.php](file:///c:/edit/bv/routes/web.php) line 71 | `POST /skeleton-action/{token}` → SystemRouteController dispatch |

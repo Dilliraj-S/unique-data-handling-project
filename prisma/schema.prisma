@@ -1,0 +1,291 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model skeleton_tokens {
+  id         Int         @id @default(autoincrement())
+  key        String      @unique
+  module     String
+  system     TokenSystem
+  type       String
+  table      String      @map("table")
+  column     String
+  value      String
+  validate   Boolean     @default(false)
+  act        String
+  actions    String?
+  created_by String?
+  updated_by String?
+  deleted_at DateTime?
+  created_at DateTime?
+  updated_at DateTime?
+}
+
+model skeleton_sections {
+  id           BigInt    @id @default(autoincrement())
+  section_id   String    @unique
+  module_id    String
+  name         String
+  display      String?
+  icon         String
+  order        Int       @default(0)
+  is_navigable Boolean   @default(false)
+  is_approved  Boolean   @default(false)
+  created_by   String?
+  updated_by   String?
+  deleted_at   DateTime?
+  created_at   DateTime?
+  updated_at   DateTime?
+}
+
+model skeleton_items {
+  id           BigInt    @id @default(autoincrement())
+  item_id      String    @unique
+  section_id   String
+  name         String
+  display      String?
+  icon         String
+  order        Int       @default(0)
+  is_navigable Boolean   @default(false)
+  is_approved  Boolean   @default(false)
+  created_by   String?
+  updated_by   String?
+  deleted_at   DateTime?
+  created_at   DateTime?
+  updated_at   DateTime?
+}
+
+model skeleton_modules {
+  id           BigInt       @id @default(autoincrement())
+  module_id    String       @unique
+  name         String
+  display      String?
+  system       ModuleSystem
+  icon         String
+  order        Int          @default(0)
+  is_navigable Boolean      @default(false)
+  is_approved  Boolean      @default(false)
+  created_by   String?
+  updated_by   String?
+  deleted_at   DateTime?
+  created_at   DateTime?
+  updated_at   DateTime?
+}
+
+model systems {
+  id          BigInt    @id @default(autoincrement())
+  business_id String
+  system      String
+  name        String
+  database    String
+  is_active   Boolean   @default(true)
+  created_by  String?
+  updated_by  String?
+  deleted_at  DateTime?
+  created_at  DateTime?
+  updated_at  DateTime?
+}
+
+model user_permissions {
+  id            BigInt      @id @default(autoincrement())
+  user_id       String
+  permission_id String
+  is_restricted Boolean     @default(false)
+  scope_id      String?
+  valid_from    DateTime?
+  valid_until   DateTime?
+  is_active     Boolean     @default(true)
+  created_by    String?
+  updated_by    String?
+  created_at    DateTime?
+  updated_at    DateTime?
+  deleted_at    DateTime?
+  permissions   permissions @relation(fields: [permission_id], references: [permission_id], onDelete: Cascade)
+  users         users       @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([permission_id])
+  @@index([is_active])
+}
+
+model user_roles {
+  id          Int       @id @default(autoincrement())
+  user_id     String
+  role_id     String
+  assigned_by String?
+  valid_from  DateTime? @default(now())
+  valid_until DateTime?
+  notes       String?
+  is_active   Boolean?  @default(true)
+  scope_id    String?
+  deleted_at  DateTime?
+  created_by  String?
+  updated_by  String?
+  created_at  DateTime? @default(now())
+  updated_at  DateTime? @updatedAt
+  roles       roles     @relation(fields: [role_id], references: [role_id], onDelete: Cascade)
+  users       users     @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([role_id])
+  @@index([is_active])
+}
+
+model users {
+  id                            Int                @id @default(autoincrement())
+  sno                           Int?
+  user_id                       String?            @unique
+  business_id                   String
+  username                      String             @unique
+  email                         String?            @unique
+  phone                         String?
+  password                      String
+  first_name                    String?
+  last_name                     String?
+  profile                       String?
+  cover                         String?
+  settings                      String?
+  role                          String             @default("user")
+  fcm_device_token              String?
+  verification_token            String?
+  verification_token_expires_at String?
+  email_verified_at             DateTime?
+  two_factor                    TwoFactor          @default(disabled)
+  max_logins                    Int?
+  two_factor_via                TwoFactorVia?
+  two_factor_secret             String?
+  two_factor_recovery_codes     String?
+  two_factor_confirmed_at       DateTime?
+  failed_login_attempts         Int                @default(0)
+  locked_at                     DateTime?
+  last_password_changed_at      DateTime?
+  session_token                 String?
+  remember_token                String?
+  last_login_at                 DateTime?
+  is_online                     DateTime?
+  account_status                String             @default("active")
+  created_by                    String?
+  updated_by                    String?
+  deleted_at                    DateTime?
+  created_at                    DateTime?
+  updated_at                    DateTime?
+  user_permissions              user_permissions[]
+  user_roles                    user_roles[]
+}
+
+model permissions {
+  id               BigInt             @id @default(autoincrement())
+  permission_id    String             @unique
+  name             String
+  description      String?
+  is_approved      Boolean            @default(false)
+  is_skeleton      Boolean            @default(false)
+  created_by       String?
+  updated_by       String?
+  created_at       DateTime?
+  updated_at       DateTime?
+  deleted_at       DateTime?
+  role_permissions role_permissions[]
+  user_permissions user_permissions[]
+
+  @@index([name])
+  @@index([is_approved])
+}
+
+model roles {
+  id               BigInt             @id @default(autoincrement())
+  role_id          String             @unique
+  name             String             @unique
+  description      String?
+  parent_role_id   String?
+  is_system_role   Boolean            @default(false)
+  is_active        Boolean            @default(true)
+  deleted_at       DateTime?
+  created_by       String?
+  updated_by       String?
+  created_at       DateTime?
+  updated_at       DateTime?
+  role_permissions role_permissions[]
+  user_roles       user_roles[]
+
+  @@index([role_id])
+  @@index([is_active])
+}
+
+model role_permissions {
+  id            BigInt      @id @default(autoincrement())
+  role_id       String
+  permission_id String
+  scope_id      String?
+  valid_from    DateTime?
+  valid_until   DateTime?
+  is_active     Boolean     @default(true)
+  created_by    String?
+  updated_by    String?
+  created_at    DateTime?
+  updated_at    DateTime?
+  deleted_at    DateTime?
+  permissions   permissions @relation(fields: [permission_id], references: [permission_id], onDelete: Cascade)
+  roles         roles       @relation(fields: [role_id], references: [role_id], onDelete: Cascade)
+
+  @@index([role_id])
+  @@index([permission_id])
+  @@index([is_active])
+}
+
+model workflows {
+  id               Int        @id @default(autoincrement())
+  flow_id          String     @unique @db.VarChar(10)
+  identifier       String     @unique @db.VarChar(50)
+  name             String     @db.VarChar(100)
+  type             WorkflowType @default(wf)
+  required_headers String     @db.Text
+  update_headers   String     @db.Text
+  mapping_headers  String     @db.Text
+  support_table    String?    @db.VarChar(50)
+  mandatory        Boolean?   @default(true)
+  created_at       DateTime   @default(now()) @db.Timestamp(0)
+  updated_at       DateTime   @default(now()) @updatedAt @db.Timestamp(0)
+  deleted_at       DateTime?  @db.Timestamp(0)
+}
+
+enum WorkflowType {
+  wf
+  mf
+  wmf
+}
+
+
+enum TokenSystem {
+  central
+  business
+  open
+  lander
+}
+
+enum ModuleSystem {
+  central
+  business
+  open
+}
+
+enum TwoFactor {
+  enabled
+  pending
+  disabled
+  empty
+}
+
+enum TwoFactorVia {
+  app
+  email
+  sms
+  whatsapp
+}
+

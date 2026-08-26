@@ -1,0 +1,16 @@
+Connected to MongoDB
+
+Checking skeleton_tokens for filter pages...
+
+OK: central_filters_master_leads -> master_leads
+OK: central_filters_apollo -> apollo
+OK: central_filters_dlslinkedin -> dlslinkedin
+OK: central_filters_karur -> karur
+OK: central_filters_outsourcing -> outsourcing
+OK: central_filters_zoom -> zoom
+OK: central_filters_other -> other
+
+--- SUMMARY ---
+Correct: 7
+Fixed: 0
+Missing: 0

@@ -1,0 +1,99 @@
+{
+  "$jsonSchema": {
+    "bsonType": "object",
+    "required": [
+      "id",
+      "campaign_id",
+      "assignment_mode",
+      "total_emails",
+      "sent_emails",
+      "failed_emails",
+      "pending_emails",
+      "sending_emails",
+      "status"
+    ],
+    "properties": {
+      "id": {
+        "bsonType": "long",
+        "description": "must be bigint unsigned (NumberLong) and is required"
+      },
+      "progress_id": {
+        "bsonType": [
+          "string",
+          "null"
+        ],
+        "description": "optional string or null"
+      },
+      "campaign_id": {
+        "bsonType": "long",
+        "description": "must be bigint unsigned (NumberLong) and is required"
+      },
+      "batch_size": {
+        "bsonType": [
+          "string",
+          "null"
+        ],
+        "description": "optional string or null"
+      },
+      "assignment_mode": {
+        "enum": [
+          "batch_size",
+          "manual_assign"
+        ],
+        "description": "must be either 'batch_size' or 'manual_assign'"
+      },
+      "manual_assignments": {
+        "bsonType": [
+          "string",
+          "null"
+        ],
+        "description": "optional long text or null"
+      },
+      "from_email": {
+        "bsonType": [
+          "string",
+          "null"
+        ],
+        "description": "optional string or null"
+      },
+      "total_emails": {
+        "bsonType": "int",
+        "description": "must be integer and is required"
+      },
+      "sent_emails": {
+        "bsonType": "int",
+        "description": "must be integer and is required"
+      },
+      "failed_emails": {
+        "bsonType": "int",
+        "description": "must be integer and is required"
+      },
+      "pending_emails": {
+        "bsonType": "int",
+        "description": "must be integer and is required"
+      },
+      "sending_emails": {
+        "bsonType": "int",
+        "description": "must be integer and is required"
+      },
+      "status": {
+        "bsonType": "string",
+        "description": "must be string and is required"
+      },
+      "created_at": {
+        "bsonType": [
+          "date",
+          "null"
+        ],
+        "description": "timestamp or null"
+      },
+      "updated_at": {
+        "bsonType": [
+          "date",
+          "null"
+        ],
+        "description": "timestamp or null"
+      }
+    }
+  }
+}

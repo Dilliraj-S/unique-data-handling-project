@@ -1,0 +1,1201 @@
+/* Custom styles for the application */
+
+body {
+  background-color: var(--cui-tertiary-bg);
+}
+
+.wrapper {
+  width: 100%;
+  padding-inline: var(--cui-sidebar-occupy-start, 0) var(--cui-sidebar-occupy-end, 0);
+  will-change: auto;
+  transition: padding 0.15s;
+}
+
+.header > .container-fluid,
+.sidebar-header {
+  min-height: calc(4rem + 1px);
+}
+
+.sidebar-brand-full {
+  margin-left: 3px;
+}
+
+.sidebar-header .nav-underline-border {
+  --cui-nav-underline-border-link-padding-x: 1rem;
+  --cui-nav-underline-border-gap: 0;
+}
+
+.sidebar-header .nav-link {
+  display: flex;
+  align-items: center;
+  min-height: calc(4rem + 1px);
+}
+
+.sidebar-toggler {
+  margin-inline-start: auto;
+}
+
+.sidebar-narrow .sidebar-toggler,
+.sidebar-narrow-unfoldable:not(:hover) .sidebar-toggler {
+  margin-inline-end: auto;
+}
+
+.header > .container-fluid + .container-fluid {
+  min-height: 3rem;
+}
+
+.footer {
+  min-height: calc(3rem + 1px);
+}
+
+/* Dark mode styles */
+:root[data-coreui-theme="dark"] body {
+  background-color: var(--cui-dark-bg-subtle);
+}
+
+:root[data-coreui-theme="dark"] .footer {
+  --cui-footer-bg: var(--cui-body-bg);
+}
+
+/* Ensure select dropdown options are visible */
+select,
+select option,
+.form-select,
+.form-select option {
+  color: #000 !important;
+  background-color: #fff !important;
+}
+
+select option:disabled,
+.form-select option:disabled {
+  color: #666 !important;
+}
+
+/* Dark mode support for selects */
+:root[data-coreui-theme="dark"] select,
+:root[data-coreui-theme="dark"] select option,
+:root[data-coreui-theme="dark"] .form-select,
+:root[data-coreui-theme="dark"] .form-select option {
+  color: #fff !important;
+  background-color: #212529 !important;
+}
+
+/* ============================================
+   Beautiful Table Styles - Light & Dark Mode
+   ============================================ */
+
+/* ===== LIGHT MODE TABLE STYLES ===== */
+
+/* Table cell padding and alignment - Match bv project size */
+.table th,
+.table td {
+  padding: 8px 12px;
+  vertical-align: middle !important;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+/* Table small size - Match bv project exactly */
+.table-sm th,
+.table-sm td {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+/* Light Mode - Table Header (Violet/Purple) - Match bv project size */
+.table thead tr th,
+.dataTable thead tr th,
+table.dataTable thead tr th,
+.thead-primary th {
+  background: linear-gradient(135deg, #9369f3 0%, #7c5cf0 100%) !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 8px 12px;
+  border-color: rgba(255, 255, 255, 0.1);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  letter-spacing: 0.3px;
+}
+
+/* Table small header size */
+.table-sm thead tr th,
+.table-sm .thead-primary th {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+/* Light Mode - Table Body */
+.table tbody tr {
+  background-color: #ffffff;
+  border-color: #E9EDF4;
+  transition: background-color 0.2s ease;
+}
+
+.table tbody tr:hover {
+  background-color: #F9FAFB;
+}
+
+.table tbody tr td {
+  color: #1F2937;
+  border-color: #E9EDF4;
+  background-color: transparent;
+}
+
+/* Light Mode - Striped rows */
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: #F9FAFB;
+}
+
+.table-striped tbody tr:nth-of-type(odd):hover {
+  background-color: #F3F4F6;
+}
+
+/* Light Mode - Links in table */
+.table tbody tr td a {
+  color: #2563EB;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.table tbody tr td a:hover {
+  color: #1D4ED8;
+  text-decoration: underline;
+}
+
+/* Light Mode - Muted text */
+.table tbody tr td .text-muted {
+  color: #6B7280 !important;
+}
+
+/* ===== DARK MODE TABLE STYLES ===== */
+
+/* Dark Mode - Table Header (Violet/Purple - Keep same beautiful color) - Match bv project size */
+:root[data-coreui-theme="dark"] .table thead tr th,
+:root[data-coreui-theme="dark"] .dataTable thead tr th,
+:root[data-coreui-theme="dark"] table.dataTable thead tr th,
+:root[data-coreui-theme="dark"] .thead-primary th {
+  background: linear-gradient(135deg, #9369f3 0%, #7c5cf0 100%) !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 8px 12px;
+  border-color: rgba(255, 255, 255, 0.15);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  letter-spacing: 0.3px;
+}
+
+/* Table small header size - Dark mode */
+:root[data-coreui-theme="dark"] .table-sm thead tr th,
+:root[data-coreui-theme="dark"] .table-sm .thead-primary th {
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+/* Dark Mode - Table Body Background */
+:root[data-coreui-theme="dark"] .table tbody tr {
+  background-color: #1F2937;
+  border-color: #374151;
+  transition: background-color 0.2s ease;
+}
+
+:root[data-coreui-theme="dark"] .table tbody tr:hover {
+  background-color: #2D3748;
+}
+
+/* Dark Mode - Table Body Text (WHITE for visibility) */
+:root[data-coreui-theme="dark"] .table tbody tr td {
+  color: #F9FAFB !important;
+  border-color: #374151;
+  background-color: transparent;
+}
+
+/* Dark Mode - Striped rows */
+:root[data-coreui-theme="dark"] .table-striped tbody tr:nth-of-type(odd) {
+  background-color: #1F2937;
+}
+
+:root[data-coreui-theme="dark"] .table-striped tbody tr:nth-of-type(odd):hover {
+  background-color: #2D3748;
+}
+
+/* Dark Mode - Links in table */
+:root[data-coreui-theme="dark"] .table tbody tr td a {
+  color: #60A5FA !important;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+:root[data-coreui-theme="dark"] .table tbody tr td a:hover {
+  color: #93C5FD !important;
+  text-decoration: underline;
+}
+
+/* Dark Mode - Muted text */
+:root[data-coreui-theme="dark"] .table tbody tr td .text-muted {
+  color: #9CA3AF !important;
+}
+
+/* Dark Mode - Badges */
+:root[data-coreui-theme="dark"] .table tbody tr td .badge {
+  color: #ffffff !important;
+}
+
+:root[data-coreui-theme="dark"] .table tbody tr td .badge.bg-success {
+  background-color: #10B981 !important;
+  color: #ffffff !important;
+}
+
+:root[data-coreui-theme="dark"] .table tbody tr td .badge.bg-secondary {
+  background-color: #6B7280 !important;
+  color: #ffffff !important;
+}
+
+/* ===== TABLE ROUNDED CORNERS ===== */
+table thead tr:first-child th:first-child {
+  border-top-left-radius: 8px;
+}
+
+table thead tr:first-child th:last-child {
+  border-top-right-radius: 8px;
+}
+
+table tbody tr:last-child td:first-child {
+  border-bottom-left-radius: 8px;
+}
+
+table tbody tr:last-child td:last-child {
+  border-bottom-right-radius: 8px;
+}
+
+/* ===== TABLE ACTIONS GROUP - LIGHT MODE ===== */
+.table-actions-group {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+}
+
+.table-actions-group button {
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 13px;
+  margin: 0px 2px;
+  color: #9369f3;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.table-actions-group button:hover {
+  background: #9369f3;
+  border-color: #9369f3;
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(147, 105, 243, 0.3);
+}
+
+.table-actions-group button.view:hover {
+  background: #9369f3;
+  border-color: #9369f3;
+  color: #fff;
+}
+
+.table-actions-group button.edit:hover {
+  background: #10B981;
+  border-color: #10B981;
+  color: #fff;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);
+}
+
+.table-actions-group button.delete:hover {
+  background: #EF4444;
+  border-color: #EF4444;
+  color: #fff;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+}
+
+/* ===== TABLE ACTIONS GROUP - DARK MODE ===== */
+:root[data-coreui-theme="dark"] .table-actions-group button {
+  color: #A78BFA !important;
+  border-color: rgba(167, 139, 250, 0.3);
+}
+
+:root[data-coreui-theme="dark"] .table-actions-group button:hover {
+  background: #9369f3;
+  border-color: #9369f3;
+  color: #fff !important;
+  box-shadow: 0 2px 6px rgba(147, 105, 243, 0.4);
+}
+
+:root[data-coreui-theme="dark"] .table-actions-group button.view:hover {
+  background: #9369f3;
+  border-color: #9369f3;
+  color: #fff !important;
+}
+
+:root[data-coreui-theme="dark"] .table-actions-group button.edit:hover {
+  background: #10B981;
+  border-color: #10B981;
+  color: #fff !important;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.4);
+}
+
+:root[data-coreui-theme="dark"] .table-actions-group button.delete:hover {
+  background: #EF4444;
+  border-color: #EF4444;
+  color: #fff !important;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+}
+
+/* ===== TABLE BORDERS & SHADOWS ===== */
+.table {
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+:root[data-coreui-theme="dark"] .table {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* Table wrapper styling - Add horizontal scrollbar */
+.table-responsive {
+  border-radius: 8px;
+  overflow-x: auto;
+  overflow-y: visible;
+  background-color: transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Ensure table maintains minimum width for horizontal scroll */
+.table-responsive .table {
+  min-width: 100%;
+}
+
+/* Allow text wrapping in cells but ensure headers are visible */
+.table-responsive .table th {
+  white-space: nowrap;
+  min-width: fit-content;
+}
+
+.table-responsive .table td {
+  white-space: normal;
+  word-wrap: break-word;
+  max-width: 200px; /* Prevent cells from becoming too wide */
+}
+
+:root[data-coreui-theme="dark"] .table-responsive {
+  background-color: transparent;
+}
+
+/* ============================================
+   Modal Styles (Hello Kuppam Skeleton Modal)
+   ============================================ */
+
+/* Modal base styles */
+.skeleton-modal .modal-content {
+  border-radius: 0.8rem !important;
+  padding: 10px !important;
+}
+
+/* ============================================
+   Offcanvas Styles (Hello Kuppam Skeleton Offcanvas)
+   ============================================ */
+
+/* Offcanvas base styles */
+.skeleton-offcanvas {
+  border-radius: 0;
+}
+
+.skeleton-offcanvas-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  margin: 0;
+  border: 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.skeleton-ofc-hdr-lbl-grp {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.skeleton-offcanvas-label {
+  font-weight: 500;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.skeleton-ofc-hdr-btn-grp {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.skeleton-ofc-hdr-btn-grp button {
+  cursor: pointer;
+  background: transparent;
+  width: 32px;
+  height: 32px;
+  padding: 3px;
+  font-size: 14px;
+  border: none;
+  border-radius: 0.6rem !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  color: #6B7280;
+}
+
+.skeleton-ofc-hdr-btn-grp button:hover {
+  background-color: #008c8c;
+  color: #fff;
+}
+
+.skeleton-ofc-hdr-btn-grp button.btn-close:hover {
+  background-color: #ff0000;
+  color: #fff;
+}
+
+.skeleton-offcanvas-body {
+  padding: 12px;
+  overflow-y: auto;
+}
+
+.skeleton-offcanvas-footer {
+  display: flex;
+  gap: 5px;
+  justify-content: flex-end;
+  padding: 12px;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.offcanvas-dragbar {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 100px;
+  background: rgba(0, 0, 0, 0.1);
+  cursor: ew-resize;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.offcanvas-dragbar i {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.3);
+}
+
+/* Modal header */
+.skeleton-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  margin: 0;
+  border: 0;
+  border-radius: 8px 8px 2px 2px;
+}
+
+/* Modal body */
+.skeleton-modal-body {
+  padding: 10px 12px;
+  margin: 0;
+  border: 0;
+}
+
+/* Modal footer */
+.skeleton-modal-footer {
+  display: flex;
+  gap: 5px;
+  justify-content: flex-end;
+  padding: 12px;
+  margin: 0;
+  border: 0;
+}
+
+/* Header button groups */
+.skeleton-mdl-hdr-btn-grp,
+.skeleton-mdl-hdr-lbl-grp {
+  display: flex;
+  align-items: center;
+}
+
+.skeleton-mdl-hdr-btn-grp button,
+.skeleton-mdl-hdr-lbl-grp button {
+  cursor: pointer;
+  background: transparent;
+  width: 32px;
+  height: 32px;
+  padding: 3px;
+  font-size: 14px;
+  border: none;
+  border-radius: 0.6rem !important;
+  margin-left: 6px;
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.skeleton-mdl-hdr-lbl-grp button {
+  margin-left: 0;
+  margin-right: 6px;
+}
+
+/* Modal header label group */
+.skeleton-mdl-hdr-lbl-grp {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.skeleton-modal-label {
+  font-weight: 500;
+  font-size: 1.1rem;
+}
+
+.sf-11 {
+  font-size: 0.85rem;
+  color: #6B7280;
+  margin-top: 2px;
+}
+
+/* Hover effects for modal buttons */
+.skeleton-mdl-hdr-btn-grp button:hover,
+.skeleton-mdl-hdr-lbl-grp button:hover {
+  background-color: #008c8c;
+  color: #fff;
+}
+
+.skeleton-mdl-hdr-btn-grp button[onclick]:hover,
+.skeleton-mdl-hdr-btn-grp button:last-child:hover {
+  background-color: #ff0000;
+  color: #fff;
+}
+
+/* Drag handle */
+.modal-drag-handle {
+  cursor: move !important;
+  user-select: none;
+}
+
+.modal-drag-handle span {
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* Fullscreen modal support */
+.modal-dialog.fullscreen {
+  width: 100vw;
+  max-width: 100vw;
+  height: 100vh;
+  margin: 0;
+}
+
+.modal-content.fullscreen {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+}
+
+/* Table responsive wrapper */
+.table-responsive {
+  border-radius: 0.5rem;
+  margin-bottom: 10px;
+}
+
+/* Table border styles */
+.table {
+  border-collapse: collapse;
+  width: 100%;
+  color: #6B7280;
+  border-color: #E5E7EB;
+  margin-block-end: 0;
+}
+
+.table tbody tr {
+  border-color: #E9EDF4;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ============================================
+   Login Page Animations
+   ============================================ */
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+/* ============================================
+   Hello Kuppam Button Styles
+   ============================================ */
+
+/* Base Button Styles */
+.btn {
+  border-radius: 0.5rem;
+  padding: 0.3rem 0.85rem;
+  font-size: 14px;
+  transition: all 0.5s;
+  font-weight: 500;
+  border: 1px solid transparent;
+}
+
+.btn:focus {
+  box-shadow: none !important;
+  outline: none;
+}
+
+.btn:hover {
+  transition: all 0.5s;
+}
+
+/* Button Sizes */
+.btn.btn-lg {
+  padding: 0.65rem 1rem;
+  font-size: 0.95rem;
+}
+
+.btn.btn-sm {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+.btn.btn-xs {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.6rem;
+}
+
+.btn.btn-md {
+  padding: 0.35rem 0.85rem;
+  font-size: 0.813rem;
+}
+
+/* Primary Button - Hello Kuppam Purple */
+.btn-primary,
+.btn.btn-primary,
+button.btn-primary,
+.cui-btn-primary {
+  background-color: #9369f3 !important;
+  border: 1px solid #9369f3 !important;
+  color: #FFF !important;
+  font-size: 14px;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary.focus,
+.btn-primary:active,
+.btn-primary.active,
+.btn.btn-primary:hover,
+.btn.btn-primary:focus,
+.btn.btn-primary.focus,
+.btn.btn-primary:active,
+.btn.btn-primary.active,
+button.btn-primary:hover,
+button.btn-primary:focus,
+.cui-btn-primary:hover,
+.cui-btn-primary:focus {
+  background-color: #7c4ed8 !important;
+  border: 1px solid #7c4ed8 !important;
+  color: #FFF !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(147, 105, 243, 0.3);
+}
+
+.btn-primary:not(:disabled):not(.disabled):active,
+.btn-primary:not(:disabled):not(.disabled).active {
+  background-color: #6a3fc4;
+  border-color: #6a3fc4;
+}
+
+/* Secondary Button */
+.btn-secondary,
+.btn.btn-secondary {
+  background-color: #3B7080;
+  border: 1px solid #3B7080;
+  color: #FFF;
+}
+
+.btn-secondary:hover,
+.btn-secondary:focus,
+.btn-secondary.focus,
+.btn-secondary:active,
+.btn-secondary.active,
+.btn.btn-secondary:hover,
+.btn.btn-secondary:focus,
+.btn.btn-secondary.focus,
+.btn.btn-secondary:active,
+.btn.btn-secondary.active {
+  background-color: #2d5663;
+  border: 1px solid #2d5663;
+  color: #FFF;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(59, 112, 128, 0.3);
+}
+
+/* Success Button */
+.btn-success,
+.btn.btn-success {
+  background-color: #03C95A;
+  border: 1px solid #03C95A;
+  color: #FFF;
+}
+
+.btn-success:hover,
+.btn-success:focus,
+.btn-success.focus,
+.btn-success:active,
+.btn-success.active,
+.btn.btn-success:hover,
+.btn.btn-success:focus,
+.btn.btn-success.focus,
+.btn.btn-success:active,
+.btn.btn-success.active {
+  background-color: #02a548;
+  border: 1px solid #02a548;
+  color: #FFF;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(3, 201, 90, 0.3);
+}
+
+/* Info Button */
+.btn-info,
+.btn.btn-info {
+  background-color: #1B84FF;
+  border: 1px solid #1B84FF;
+  color: #FFF;
+}
+
+.btn-info:hover,
+.btn-info:focus,
+.btn-info.focus,
+.btn-info:active,
+.btn-info.active,
+.btn.btn-info:hover,
+.btn.btn-info:focus,
+.btn.btn-info.focus,
+.btn.btn-info:active,
+.btn.btn-info.active {
+  background-color: #0066e6;
+  border: 1px solid #0066e6;
+  color: #FFF;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(27, 132, 255, 0.3);
+}
+
+/* Warning Button */
+.btn-warning,
+.btn.btn-warning {
+  background-color: #FFC107;
+  border: 1px solid #FFC107;
+  color: #212529;
+}
+
+.btn-warning:hover,
+.btn-warning:focus,
+.btn-warning.focus,
+.btn-warning:active,
+.btn-warning.active,
+.btn.btn-warning:hover,
+.btn.btn-warning:focus,
+.btn.btn-warning.focus,
+.btn.btn-warning:active,
+.btn.btn-warning.active {
+  background-color: #e0a800;
+  border: 1px solid #e0a800;
+  color: #212529;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(255, 193, 7, 0.3);
+}
+
+/* Danger Button */
+.btn-danger,
+.btn.btn-danger {
+  background-color: #FF1500;
+  border: 1px solid #FF1500;
+  color: #FFF;
+}
+
+.btn-danger:hover,
+.btn-danger:focus,
+.btn-danger.focus,
+.btn-danger:active,
+.btn-danger.active,
+.btn.btn-danger:hover,
+.btn.btn-danger:focus,
+.btn.btn-danger.focus,
+.btn.btn-danger:active,
+.btn.btn-danger.active {
+  background-color: #cc1100;
+  border: 1px solid #cc1100;
+  color: #FFF;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(255, 21, 0, 0.3);
+}
+
+/* Dark Button */
+.btn-dark,
+.btn.btn-dark {
+  background-color: #212529;
+  border: 1px solid #212529;
+  color: #FFF;
+}
+
+.btn-dark:hover,
+.btn-dark:focus,
+.btn-dark.focus,
+.btn-dark:active,
+.btn-dark.active,
+.btn.btn-dark:hover,
+.btn.btn-dark:focus,
+.btn.btn-dark.focus,
+.btn.btn-dark:active,
+.btn.btn-dark.active {
+  background-color: #0d1114;
+  border: 1px solid #0d1114;
+  color: #FFF;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(33, 37, 41, 0.3);
+}
+
+/* Link Button */
+.btn-link {
+  color: #9369f3;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.btn-link:hover,
+.btn-link:focus {
+  color: #7c4ed8;
+  text-decoration: underline;
+}
+
+/* Disabled Buttons */
+.btn:disabled,
+.btn.disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Button with Icons */
+.btn i,
+.btn .icon {
+  margin-right: 0.25rem;
+}
+
+.btn i:only-child,
+.btn .icon:only-child {
+  margin-right: 0;
+}
+
+/* ============================================
+   DynamicTable Styles - Matching bv Project Exactly
+   ============================================ */
+
+/* Table Container */
+.skeleton-view-container {
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* Table Styles - Exact match to bv project */
+.table.table-bordered {
+  border-collapse: collapse;
+  width: 100%;
+  margin-bottom: 0;
+}
+
+.table.table-bordered th,
+.table.table-bordered td {
+  border: 1px solid #dee2e6;
+}
+
+.table.table-striped tbody tr:nth-of-type(odd) {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.table.table-hover tbody tr:hover {
+  background-color: rgba(29, 180, 205, 0.05);
+}
+
+/* Table Header - Teal Background (Override purple for bv project) */
+.thead-primary th {
+  background-color: #1db4cd !important;
+  color: #ffffff !important;
+  font-weight: 600;
+  padding: 12px 8px;
+  border: 1px solid #dee2e6;
+  position: relative;
+  vertical-align: middle;
+}
+
+.thead-primary th:first-child {
+  border-top-left-radius: 5px;
+}
+
+.thead-primary th:last-child {
+  border-top-right-radius: 5px;
+}
+
+/* Control Panel Styles */
+.data-table {
+  padding: 15px 20px;
+  border-bottom: 1px solid #e9ecef;
+  background-color: #f8f9fa;
+}
+
+.dt-length {
+  display: flex;
+  align-items: center;
+}
+
+.dt-length label {
+  margin: 0;
+  font-size: 12px;
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dt-length select {
+  font-size: 12px;
+  font-weight: bold;
+  height: 23px;
+  border: none !important;
+  padding: 0px 31px 0px 10px;
+  background-color: #ffffff;
+  border-radius: 4px;
+}
+
+.dt-length select:focus,
+.dt-length select:hover,
+.dt-length select:active {
+  border: none !important;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(29, 180, 205, 0.25);
+}
+
+/* Search Input Styles */
+.skl-filter-search {
+  height: 34px;
+  padding: 0px 12px;
+  border-radius: 5px;
+  border: 1px solid #1db4cd;
+  font-size: 12px;
+  min-width: 200px;
+}
+
+.skl-filter-search:focus {
+  border-color: #1db4cd;
+  box-shadow: 0 0 0 2px rgba(29, 180, 205, 0.25);
+  outline: none;
+}
+
+/* Filter Button Styles */
+.skl-filter-btn {
+  border: 1px solid #1db4cd;
+  background: transparent;
+  height: 34px;
+  font-size: 12px;
+  border-radius: 5px;
+  color: #1db4cd;
+  padding: 0 12px;
+  transition: all 0.2s ease;
+  margin-left: 2px;
+}
+
+.skl-filter-btn:hover {
+  background: #1db4cd;
+  color: #ffffff;
+  border-color: #1db4cd;
+}
+
+.skl-filter-btn-active {
+  border: 1px solid #1db4cd;
+  background: #1db4cd;
+  height: 34px;
+  font-size: 12px;
+  border-radius: 5px;
+  color: #ffffff;
+  padding: 0 12px;
+  transition: all 0.2s ease;
+  margin-left: 2px;
+}
+
+.skl-filter-btn-active:hover {
+  background: #17a2b8;
+  border-color: #17a2b8;
+  color: #ffffff;
+}
+
+.skl-filter-btn i,
+.skl-filter-btn-active i {
+  margin-right: 4px;
+}
+
+/* Filter Pills */
+.filters-pill-container {
+  gap: 5px;
+}
+
+.filters-pill-container .badge {
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  background-color: #e9ecef;
+  color: #495057;
+  border: 1px solid #ced4da;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.filters-pill-container .btn-close {
+  font-size: 8px;
+  padding: 0;
+  margin: 0;
+  background: none;
+  border: none;
+  color: #6c757d;
+  cursor: pointer;
+}
+
+.filters-pill-container .btn-close:hover {
+  color: #dc3545;
+}
+
+.skeleton-clear-all {
+  font-size: 11px;
+  color: #dc3545;
+  text-decoration: none;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.skeleton-clear-all:hover {
+  color: #c82333;
+  text-decoration: underline;
+}
+
+/* Filters Row */
+.filters-row {
+  padding: 10px 20px;
+  border-bottom: 1px solid #e9ecef;
+  background-color: #f8f9fa;
+}
+
+/* Pagination Styles */
+.pagination {
+  margin: 0;
+  gap: 2px;
+}
+
+.pagination .page-link {
+  height: 26px;
+  min-width: 26px;
+  font-size: 13px;
+  padding: 3px 6px;
+  border-radius: 2px;
+  border: 1px solid #dee2e6;
+  color: #1db4cd;
+  background-color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.pagination .page-link:hover {
+  background-color: #e9ecef;
+  border-color: #1db4cd;
+  color: #1db4cd;
+}
+
+.pagination .page-item.active .page-link {
+  background-color: #1db4cd;
+  border-color: #1db4cd;
+  color: #ffffff;
+}
+
+.pagination .page-item.disabled .page-link {
+  color: #6c757d;
+  background-color: #ffffff;
+  border-color: #dee2e6;
+  cursor: not-allowed;
+}
+
+/* Info Styles */
+.dt-info {
+  font-size: 12px;
+  color: #6c757d;
+  padding: 10px 0;
+}
+
+/* Action Icons */
+.action-icons {
+  display: flex;
+  gap: 5px;
+}
+
+/* Filter Config Table */
+.filter-config-table {
+  font-size: 12px;
+}
+
+.filter-config-table th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  padding: 8px;
+}
+
+.filter-config-table td {
+  padding: 8px;
+  vertical-align: middle;
+}
+
+/* Font Size Utilities */
+.sf-9 { font-size: 9px !important; }
+.sf-10 { font-size: 10px !important; }
+.sf-11 { font-size: 11px !important; }
+.sf-12 { font-size: 12px !important; }
+.sf-13 { font-size: 13px !important; }
+.sf-14 { font-size: 14px !important; }
+.sf-15 { font-size: 15px !important; }
+

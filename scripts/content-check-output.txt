@@ -1,0 +1,39 @@
+Connected to MongoDB
+
+Checking tokens and their _t variants...
+
+BASE: central_filters_master_leads
+  ✅ Exists. Table: master_leads
+VARIANT: central_filters_master_leads_t
+  ℹ️ Does not exist (Will fallback to base)
+---
+BASE: central_filters_apollo
+  ✅ Exists. Table: apollo
+VARIANT: central_filters_apollo_t
+  ℹ️ Does not exist (Will fallback to base)
+---
+BASE: central_filters_dlslinkedin
+  ✅ Exists. Table: dlslinkedin
+VARIANT: central_filters_dlslinkedin_t
+  ℹ️ Does not exist (Will fallback to base)
+---
+BASE: central_filters_karur
+  ✅ Exists. Table: karur
+VARIANT: central_filters_karur_t
+  ℹ️ Does not exist (Will fallback to base)
+---
+BASE: central_filters_outsourcing
+  ✅ Exists. Table: outsourcing
+VARIANT: central_filters_outsourcing_t
+  ℹ️ Does not exist (Will fallback to base)
+---
+BASE: central_filters_zoom
+  ✅ Exists. Table: zoom
+VARIANT: central_filters_zoom_t
+  ℹ️ Does not exist (Will fallback to base)
+---
+BASE: central_filters_other
+  ✅ Exists. Table: other
+VARIANT: central_filters_other_t
+  ℹ️ Does not exist (Will fallback to base)
+---

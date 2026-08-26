@@ -1,0 +1,507 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  CCard,
+  CCardBody,
+  CCardHeader,
+  CCol,
+  CRow,
+  CButton,
+  CAlert
+} from '@coreui/react';
+import CIcon from '@coreui/icons-react';
+import { cilPlus, cilReload, cilBuilding } from '@coreui/icons';
+import DynamicTable from 'src/application/Components/DynamicTable';
+import DynamicModal from 'src/application/Components/DynamicModal';
+import ViewModal from 'src/application/Components/ViewModal';
+import { useViewModal } from 'src/application/Hooks/useViewModal';
+import { useDelete } from 'src/application/Hooks/useDelete';
+import AuthService from 'src/application/Services/AuthService';
+import ExportService from 'src/services/ExportService';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import AddAudienceModal from 'src/resources/views/components/Audience/AddAudienceModal';
+import AddProductModal from 'src/resources/views/components/Product/AddProductModal';
+
+/**
+ * Companies Page - Master Accounts Management
+ * URL: /central/filters/companies
+ * Token: central_filters_master_accounts
+ */
+const Companies = () => {
+  console.log('🔵 CompaniesPage component rendering...');
+  const navigate = useNavigate();
+  
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const [modalConfig, setModalConfig] = useState(null);
+  const [modalMode, setModalMode] = useState('add');
+  const [showModal, setShowModal] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState(null);
+  const [tableRefreshKey, setTableRefreshKey] = useState(0);
+  const [audiences, setAudiences] = useState([]);
+  const [audienceContext, setAudienceContext] = useState(null);
+  const [showAudienceModal, setShowAudienceModal] = useState(false);
+  const [audienceModalError, setAudienceModalError] = useState(null);
+  const [audienceSaving, setAudienceSaving] = useState(false);
+  const [audienceLoading, setAudienceLoading] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [productContext, setProductContext] = useState(null);
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [productModalError, setProductModalError] = useState(null);
+  const [productSaving, setProductSaving] = useState(false);
+  const [productLoading, setProductLoading] = useState(false);
+
+  const baseToken = 'central_filters_master_accounts';
+
+  // Universal view modal hook - works for all tables automatically
+  const { handleView, showViewModal, viewData, setShowViewModal, setViewData } = useViewModal(baseToken);
+  
+  // Universal delete hook - works for all tables automatically
+  const { handleDelete } = useDelete(baseToken, () => {
+    setTableRefreshKey(prev => prev + 1);
+  });
+
+  const getAuthAxios = () => {
+    const token = AuthService.getToken();
+    return axios.create({
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : '',
+        'Content-Type': 'application/json'
+      }
+    });
+  };
+
+  const fetchFormConfig = async (mode, recordId = null) => {
+    try {
+      const token = mode === 'add' ? `${baseToken}_as` : `${baseToken}_es`;
+      const url = recordId 
+        ? `/api/skeleton-action/${token}?id=${recordId}`
+        : `/api/skeleton-action/${token}`;
+
+      const authAxios = getAuthAxios();
+      const response = await authAxios.get(url);
+
+      if (response.data.status) {
+        setModalConfig(response.data);
+        setModalMode(mode);
+        setShowModal(true);
+      } else {
+        alert(response.data.message || 'Failed to load form configuration');
+      }
+    } catch (err) {
+      console.error('Error fetching form config:', err);
+      alert(err.response?.data?.message || 'Failed to load form configuration');
+    }
+  };
+
+  const handleAdd = () => {
+    setSelectedRecord(null);
+    fetchFormConfig('add');
+  };
+
+  const handleEdit = (record) => {
+    setSelectedRecord(record);
+    fetchFormConfig('edit', record.id);
+  };
+
+  const handleSubmit = async (formData) => {
+    try {
+      const token = modalMode === 'add' ? `${baseToken}_as` : `${baseToken}_es`;
+      const payload = selectedRecord?.id 
+        ? { ...formData, id: selectedRecord.id }
+        : formData;
+
+      const authAxios = getAuthAxios();
+      const response = await authAxios.post(`/api/skeleton-action/${token}`, payload);
+
+      if (response.data.status) {
+        setShowModal(false);
+        setTableRefreshKey(prev => prev + 1);
+        alert(response.data.message || 'Saved successfully');
+      } else {
+        alert(response.data.message || 'Save failed');
+      }
+    } catch (err) {
+      console.error('Error submitting form:', err);
+      alert(err.response?.data?.message || 'Failed to save');
+    }
+  };
+
+  const fetchAudiences = async () => {
+    try {
+      setAudienceLoading(true);
+      const authAxios = getAuthAxios();
+      const response = await authAxios.get('/api/audiences');
+      const list = response.data?.data || response.data?.audiences || [];
+      setAudiences(Array.isArray(list) ? list : []);
+    } catch (err) {
+      console.error('Failed to fetch audiences:', err);
+      setAudienceModalError(err.response?.data?.message || 'Unable to load audiences');
+    } finally {
+      setAudienceLoading(false);
+    }
+  };
+
+  const handleAudienceAction = ({ ids, rows, meta, selectAll, excludedIds, filters, totalCount }) => {
+    if (!selectAll && !ids?.length) return;
+    setAudienceContext({ ids, rows, meta, selectAll, excludedIds, filters, totalCount });
+    setAudienceModalError(null);
+    fetchAudiences();
+    setShowAudienceModal(true);
+  };
+
+  const handleSaveAudience = async ({ mode, audienceId, audienceName, splitFullName }) => {
+    if (!audienceContext?.selectAll && !audienceContext?.rows?.length) {
+      setAudienceModalError('No records selected for audience assignment.');
+      return;
+    }
+    try {
+      setAudienceSaving(true);
+      const authAxios = getAuthAxios();
+      const payload = {
+        mode,
+        audienceId,
+        audienceName,
+        splitFullName,
+        source: {
+          table: audienceContext.meta?.tableName || 'master_accounts',
+          system: audienceContext.meta?.system || 'sun'
+        }
+      };
+
+      if (audienceContext.selectAll) {
+        payload.selectAll = true;
+        payload.filters = audienceContext.filters;
+        payload.excludedIds = audienceContext.excludedIds || [];
+        payload.totalCount = audienceContext.totalCount || 0;
+        payload.records = [];
+        payload.recordIds = [];
+      } else {
+        payload.records = audienceContext.rows;
+        payload.recordIds = audienceContext.ids || [];
+      }
+
+      const response = await authAxios.post('/api/audiences/assign', payload);
+      setSuccess(response.data?.message || 'Audience updated successfully.');
+      setShowAudienceModal(false);
+      setAudienceContext(null);
+      setAudienceModalError(null);
+    } catch (err) {
+      console.error('Failed to save audience:', err);
+      setAudienceModalError(err.response?.data?.message || err.response?.data?.error || 'Failed to save audience');
+      setError(err.response?.data?.message || 'Failed to save audience');
+    } finally {
+      setAudienceSaving(false);
+    }
+  };
+
+  const closeAudienceModal = () => {
+    if (audienceSaving) return;
+    setShowAudienceModal(false);
+    setAudienceModalError(null);
+  };
+
+  const fetchProducts = async (productType = 'zoom') => {
+    try {
+      setProductLoading(true);
+      const authAxios = getAuthAxios();
+      
+      let response;
+      if (productType === 'apollo') {
+        response = await authAxios.get('/api/products/apollo');
+      } else if (productType === 'g2') {
+        response = await authAxios.get('/api/products/g2');
+      } else if (productType === 'linkedin') {
+        response = await authAxios.get('/api/products/linkedin');
+      } else {
+        // Default: Zoom Products
+        response = await authAxios.post('/api/skeleton-action/central_unique_products_t', {
+          skeleton_filters: {
+            pagination: { page: 1, limit: 1000 }
+          },
+          skeleton_view: 'table',
+          draw: 1
+        });
+      }
+      
+      const list = response.data?.data || [];
+      setProducts(Array.isArray(list) ? list : []);
+    } catch (err) {
+      console.error('Failed to fetch products:', err);
+      setProductModalError(err.response?.data?.message || 'Unable to load products');
+    } finally {
+      setProductLoading(false);
+    }
+  };
+
+  const handleProductTypeChange = (productType) => {
+    fetchProducts(productType);
+  };
+
+  const handleProductAction = ({ ids, rows, meta }) => {
+    if (!ids?.length) return;
+    setProductContext({ ids, rows, meta });
+    setProductModalError(null);
+    fetchProducts();
+    setShowProductModal(true);
+  };
+
+  const handleSaveProduct = async ({ productType = 'zoom', mode, productId, productName, productDescription, category, vendor, sourceDescription, ppId, ppName }) => {
+    if (!productContext?.rows?.length) {
+      setProductModalError('No records selected for product assignment.');
+      return;
+    }
+    try {
+      setProductSaving(true);
+      const authAxios = getAuthAxios();
+      const payload = {
+        productType, // Include product type
+        mode,
+        productId,
+        productName,
+        description: productDescription,
+        category,
+        vendor,
+        source_description: sourceDescription,
+        pp_id: ppId,
+        pp_name: ppName,
+        ids: productContext.ids.join('@'), // Join IDs with @ separator (matching BV format)
+        type: `${productContext.meta?.system || 'sun'}.${productContext.meta?.tableName || 'master_accounts'}` // sun.master_accounts or sun.master_leads
+      };
+      
+      // Route to appropriate API endpoint based on product type
+      let apiEndpoint = '/api/skeleton-action/central_unique_products_as'; // Default: Zoom Products
+      if (productType === 'apollo') {
+        apiEndpoint = '/api/products/apollo/save';
+      } else if (productType === 'g2') {
+        apiEndpoint = '/api/products/g2/save';
+      } else if (productType === 'linkedin') {
+        apiEndpoint = '/api/products/linkedin/save';
+      }
+      
+      const response = await authAxios.post(apiEndpoint, payload);
+      if (response.data.status) {
+        setSuccess(response.data?.message || 'Product updated successfully.');
+        setShowProductModal(false);
+        setProductContext(null);
+        setProductModalError(null);
+        setTableRefreshKey(prev => prev + 1);
+      } else {
+        setProductModalError(response.data?.message || 'Failed to save product');
+        setError(response.data?.message || 'Failed to save product');
+      }
+    } catch (err) {
+      console.error('Failed to save product:', err);
+      setProductModalError(err.response?.data?.message || err.response?.data?.error || 'Failed to save product');
+      setError(err.response?.data?.message || 'Failed to save product');
+    } finally {
+      setProductSaving(false);
+    }
+  };
+
+  const closeProductModal = () => {
+    if (productSaving) return;
+    setShowProductModal(false);
+    setProductModalError(null);
+  };
+
+  // Use schema field names directly - server will provide full column list from TableCtrl
+  // Minimal column definition - server returns complete columns from schema
+  const tableColumns = {
+    id: ['id', true],
+    li_company_name: ['li_company_name', true],
+    li_smtp: ['li_smtp', true],
+    created_at: ['created_at', true]
+  };
+
+  const tableReqSet = {
+    token: `${baseToken}_t`,
+    table: 'master_accounts',
+    actions: 'v',
+    act: 'id',
+    system: 'sun'
+  };
+
+
+  // Handle export all filtered data
+  const handleExportAll = async (format, columns, filters) => {
+    try {
+      console.log(`🔄 Exporting all filtered data in ${format} format...`);
+      
+      const apiUrl = `/api/skeleton-action/${baseToken}_t`;
+      const authAxios = getAuthAxios();
+      
+      // Fetch ALL data (no pagination limit)
+      const response = await authAxios.post(apiUrl, {
+        skeleton_filters: {
+          ...filters,
+          pagination: { page: 1, limit: 999999 }, // Get all records
+          export: true
+        }
+      });
+
+      if (response.data.status && response.data.data) {
+        const allData = response.data.data;
+        console.log(`✅ Fetched ${allData.length} records for export`);
+        
+        // Create column definitions for export
+        const exportColumns = columns.map(colName => ({
+          data: colName,
+          title: colName.split('_').map(word => 
+            word.charAt(0).toUpperCase() + word.slice(1)
+          ).join(' ')
+        }));
+
+        switch (format) {
+          case 'csv':
+            ExportService.exportToCSV(allData, exportColumns, `companies_export_${Date.now()}.csv`);
+            break;
+          case 'excel':
+            ExportService.exportToExcel(allData, exportColumns, `companies_export_${Date.now()}.xlsx`);
+            break;
+          case 'pdf':
+            ExportService.exportToPDF(allData, exportColumns, `companies_export_${Date.now()}.pdf`);
+            break;
+        }
+        
+        console.log(`✅ Export completed: ${allData.length} records`);
+      } else {
+        throw new Error(response.data.message || 'Failed to fetch export data');
+      }
+    } catch (error) {
+      console.error('❌ Export error:', error);
+      throw error;
+    }
+  };
+
+  return (
+    <>
+      <CRow>
+        <CCol xs={12}>
+          <CCard className="mb-4">
+            <CCardHeader>
+              <div className="d-flex justify-content-between align-items-center">
+                <div className="d-flex align-items-center">
+                  <CIcon icon={cilBuilding} className="me-2" />
+                  Master Accounts
+                </div>
+                <div>
+                  <CButton color="primary" size="sm" className="me-2" onClick={handleAdd}>
+                    <CIcon icon={cilPlus} className="me-1" />
+                    Add Company
+                  </CButton>
+                  <CButton color="secondary" size="sm" onClick={() => setTableRefreshKey(prev => prev + 1)}>
+                    <CIcon icon={cilReload} />
+                  </CButton>
+                </div>
+              </div>
+            </CCardHeader>
+            <CCardBody>
+              {error && (
+                <CAlert color="danger" dismissible onClose={() => setError(null)}>
+                  {error}
+                </CAlert>
+              )}
+              {success && (
+                <CAlert color="success" dismissible onClose={() => setSuccess(null)}>
+                  {success}
+                </CAlert>
+              )}
+                <DynamicTable
+                key={tableRefreshKey}
+                token={`${baseToken}_t`}
+                tableName="master_accounts"
+                system="sun"
+                columns={tableColumns}
+                custom={[]}
+                reqSet={tableReqSet}
+                onAction={(actionType, row) => {
+                  if (!row) return;
+                  if (actionType === 'view') handleView(row);
+                  if (actionType === 'edit') handleEdit(row);
+                  if (actionType === 'delete') handleDelete(row);
+                }}
+                initialFilters={{}}
+                autoFetch={true}
+                enableSelection={true}
+                onAudienceAction={handleAudienceAction}
+                onProductAction={handleProductAction}
+                filterSidebarMode="collapsible"
+                onNeedToAction={async ({ ids, meta }) => {
+                  if (!ids || ids.length === 0) return;
+                  try {
+                    const authAxios = getAuthAxios();
+                    const response = await authAxios.post('/api/need-to-action', {
+                      system: meta?.system || 'sun',
+                      collection: meta?.tableName || 'master_accounts',
+                      recordIds: ids
+                    });
+                    setSuccess(response.data?.message || 'Records moved to Need-To-Action workspace');
+                  } catch (err) {
+                    console.error('Need-To-Action capture failed:', err);
+                    setError(err.response?.data?.message || 'Failed to move records to Need-To-Action workspace');
+                  }
+                }}
+                onExportAll={handleExportAll}
+                onCellClick={(column, value, row) => {
+                  if (column === 'li_company_name' && value) {
+                    navigate(`/central/filters/contacts?li_company_name=${encodeURIComponent(value)}`);
+                  }
+                  if (column === 'li_smtp' && value) {
+                    navigate(`/central/filters/contacts?li_smtp=${encodeURIComponent(value)}`);
+                  }
+                }}
+                clickableColumns={['li_company_name', 'li_smtp']}
+                />
+            </CCardBody>
+          </CCard>
+        </CCol>
+      </CRow>
+
+      {showModal && modalConfig && (
+        <DynamicModal
+          show={showModal}
+          onClose={() => setShowModal(false)}
+          config={modalConfig}
+          mode={modalMode}
+          onSubmit={handleSubmit}
+          data={selectedRecord}
+        />
+      )}
+
+      {/* View Modal (Offcanvas) - Common for all sections */}
+      <ViewModal
+        show={showViewModal}
+        onClose={() => {
+          setShowViewModal(false);
+          setViewData(null);
+        }}
+        data={viewData}
+      />
+      <AddAudienceModal
+        visible={showAudienceModal}
+        onClose={closeAudienceModal}
+        onSave={handleSaveAudience}
+        availableAudiences={audiences}
+        loadingAudiences={audienceLoading}
+        saving={audienceSaving}
+        error={audienceModalError}
+        selectedCount={audienceContext?.ids?.length || 0}
+      />
+      <AddProductModal
+        visible={showProductModal}
+        onClose={closeProductModal}
+        onSave={handleSaveProduct}
+        availableProducts={products}
+        loadingProducts={productLoading}
+        saving={productSaving}
+        error={productModalError}
+        selectedCount={productContext?.ids?.length || 0}
+        sourceTable="master_accounts"
+        onProductTypeChange={handleProductTypeChange}
+      />
+    </>
+  );
+};
+
+export default Companies;
