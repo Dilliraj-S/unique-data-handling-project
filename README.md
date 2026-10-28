@@ -1,4 +1,4 @@
-# RevenueOS — Enterprise Data & Email Intelligence Platform
+# Unique — Enterprise Data & Email Intelligence Platform
 
 ![Next.js](https://img.shields.io/badge/Next.js-14.x-black?style=for-the-badge&logo=next.js&logoColor=white)
 ![React](https://img.shields.io/badge/React-18.x-61DAFB?style=for-the-badge&logo=react&logoColor=black)
