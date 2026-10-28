@@ -20,10 +20,10 @@
 require('dotenv').config();
 const { MongoClient } = require('mongodb');
 const { PubSub } = require('@google-cloud/pubsub');
-const GmailWatcherService = require('./src/application/Services/GmailWatcherService');
-const GmailUtility = require('./src/application/Services/GmailUtility');
-const SmartClassifier = require('./src/application/Services/SmartClassifier');
-const syncActionQueue = require('./queues/syncActionQueue');
+const GmailWatcherService = require('../src/application/Services/GmailWatcherService');
+const GmailUtility = require('../src/application/Services/GmailUtility');
+const SmartClassifier = require('../src/application/Services/SmartClassifier');
+const syncActionQueue = require('../queues/syncActionQueue');
 
 // Singleton connections
 let db = null;

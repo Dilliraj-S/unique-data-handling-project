@@ -43,7 +43,7 @@ audienceQueue.process('bulk-audience-assignment', 1, async (job) => {
   try {
     await job.progress(0);
 
-    const BulkAudienceAssignmentService = require('./services/BulkAudienceAssignmentService');
+    const BulkAudienceAssignmentService = require('../services/BulkAudienceAssignmentService');
     const service = new BulkAudienceAssignmentService({
       audienceId,
       records,
@@ -278,7 +278,7 @@ audienceQueue.process('subscriber-import', 1, async (job) => {
   console.log(`👥 Audience ID: ${job.data.audienceId}`);
   console.log(`📁 File Path: ${job.data.filePath}`);
   
-  const SubscriberImportService = require('./services/SubscriberImportService');
+  const SubscriberImportService = require('../services/SubscriberImportService');
   
   try {
     await job.progress(0);

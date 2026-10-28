@@ -34,7 +34,7 @@ import { getDb, getCollection } from './src/lib/mongodb.js';
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 
-const GmailPhotoScraper = require('./src/services/GmailPhotoScraper.js');
+const GmailPhotoScraper = require('../src/services/GmailPhotoScraper.js');
 
 // ─── Configuration ─────────────────────────────────────────────────
 const MAX_TOTAL_BROWSERS      = parseInt(process.env.GMAIL_MAX_BROWSERS || '120', 10);

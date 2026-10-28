@@ -59,5 +59,12 @@ node_modules/
 dist/
 build/
 
-# Logs
+# Logs & Dumps
 *.log
+error.txt
+output.txt
+*.tmp
+.curr-user
+.current-user
+*output.json
+

@@ -30,7 +30,7 @@ emailSyncQueue.process('email-sync', 5, async (job) => {
   console.log(`📧 Account: ${job.data.email}`);
   console.log(`📂 Category: ${job.data.category}`);
   
-  const EmailSyncService = require('./src/application/Services/EmailSyncService');
+  const EmailSyncService = require('../src/application/Services/EmailSyncService');
   
   try {
     await job.progress(0);
@@ -83,7 +83,7 @@ console.log('🔄 Waiting for email sync jobs...');
 // Handle graceful shutdown
 process.on('SIGINT', async () => {
   console.log('\n🛑 Shutting down email sync worker...');
-  const EmailSyncService = require('./src/application/Services/EmailSyncService');
+  const EmailSyncService = require('../src/application/Services/EmailSyncService');
   await EmailSyncService.closeSingletonConnection();
   await emailSyncQueue.close();
   process.exit(0);
@@ -91,7 +91,7 @@ process.on('SIGINT', async () => {
 
 process.on('SIGTERM', async () => {
   console.log('\n🛑 Shutting down email sync worker...');
-  const EmailSyncService = require('./src/application/Services/EmailSyncService');
+  const EmailSyncService = require('../src/application/Services/EmailSyncService');
   await EmailSyncService.closeSingletonConnection();
   await emailSyncQueue.close();
   process.exit(0);

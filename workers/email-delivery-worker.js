@@ -8,7 +8,7 @@
 
 require('dotenv').config();
 const Queue = require('bull');
-const EmailDeliveryService = require('./src/application/Services/EmailDeliveryService');
+const EmailDeliveryService = require('../src/application/Services/EmailDeliveryService');
 
 const WORKER_ID = process.env.pm_id || '0';
 const WORKER_TAG = `[Worker #${WORKER_ID} | PID ${process.pid}]`;
@@ -37,7 +37,7 @@ console.log(`⏹️  ${WORKER_TAG} Press Ctrl+C to stop`);
 console.log(`🔧 ${WORKER_TAG} Setting up email delivery processor...`);
 
 // High-performance: Process dispatch-campaign jobs (producer)
-const DispatchCampaignJob = require('./services/DispatchCampaignJob');
+const DispatchCampaignJob = require('../services/DispatchCampaignJob');
 
 emailDeliveryQueue.process('dispatch-campaign', 1, async (job) => {
   console.log(`\n🚀 ========== PROCESSING CAMPAIGN DISPATCH JOB ${job.id} ==========`);
@@ -99,7 +99,7 @@ emailDeliveryQueue.process('send-email', CONCURRENCY, async (job) => {
         console.warn(`⛔ Max requeue limit (${MAX_REQUEUES}) reached for ${job.data.fromEmail}. Marking as failed.`);
         // Mark email as failed so it doesn't stay stuck as 'pending' forever
         try {
-          const EmailDeliveryService = require('./src/application/Services/EmailDeliveryService');
+          const EmailDeliveryService = require('../src/application/Services/EmailDeliveryService');
           const db = await EmailDeliveryService.getDatabase();
           const { Long } = require('mongodb');
           
@@ -191,7 +191,7 @@ emailDeliveryQueue.process('send-email', CONCURRENCY, async (job) => {
         // ═══════════════════════════════════════════════════════════════
         console.error(`⛔ Lock timeout: max requeues (${MAX_LOCK_REQUEUES}) exhausted for ${job.data.fromEmail}, subscriber ${job.data.subscriberId}. Marking as permanently failed.`);
         try {
-          const EmailDeliveryService = require('./src/application/Services/EmailDeliveryService');
+          const EmailDeliveryService = require('../src/application/Services/EmailDeliveryService');
           const db = await EmailDeliveryService.getDatabase();
           const { Long } = require('mongodb');
           
@@ -302,7 +302,7 @@ process.on('SIGINT', async () => {
   }
   
   // Close singleton DB connection
-  const EmailDeliveryService = require('./src/application/Services/EmailDeliveryService');
+  const EmailDeliveryService = require('../src/application/Services/EmailDeliveryService');
   await EmailDeliveryService.closeSingletonConnection();
   await EmailDeliveryService.closeSmtpTransporters();
   
@@ -321,7 +321,7 @@ process.on('SIGTERM', async () => {
   }
   
   // Close singleton DB connection
-  const EmailDeliveryService = require('./src/application/Services/EmailDeliveryService');
+  const EmailDeliveryService = require('../src/application/Services/EmailDeliveryService');
   await EmailDeliveryService.closeSingletonConnection();
   await EmailDeliveryService.closeSmtpTransporters();
   

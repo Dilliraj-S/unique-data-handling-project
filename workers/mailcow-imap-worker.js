@@ -12,7 +12,7 @@
 
 require('dotenv').config();
 const { MongoClient } = require('mongodb');
-const MailcowImapService = require('./src/application/Services/MailcowImapService');
+const MailcowImapService = require('../src/application/Services/MailcowImapService');
 
 let db = null;
 let imapService = null;

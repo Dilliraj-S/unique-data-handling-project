@@ -22,7 +22,7 @@
 require('dotenv').config();
 const Queue = require('bull');
 const { MongoClient, Long } = require('mongodb');
-const { getConnectionConfig } = require('./src/config/database.js');
+const { getConnectionConfig } = require('../src/config/database.js');
 
 console.log('📧 Starting Email Sent Status Update Worker...');
 

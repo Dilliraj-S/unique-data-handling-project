@@ -18,8 +18,8 @@
 require('dotenv').config();
 const { MongoClient } = require('mongodb');
 const Redis = require('ioredis');
-const syncActionQueue = require('./queues/syncActionQueue');
-const ActionProcessor = require('./src/application/Services/ActionProcessor');
+const syncActionQueue = require('../queues/syncActionQueue');
+const ActionProcessor = require('../src/application/Services/ActionProcessor');
 
 // Singleton connections
 let db = null;

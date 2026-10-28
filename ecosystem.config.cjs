@@ -1,5 +1,5 @@
 /**
- * PM2 ecosystem config – use this to start the Next.js app on Windows and avoid
+ * PM2 ecosystem config â€“ use this to start the Next.js app on Windows and avoid
  * "Script not found" when using: pm2 start npm -- run start
  *
  * Usage:
@@ -26,7 +26,7 @@ module.exports = {
     },
     {
       name: 'sync-action-worker',
-      script: path.join(appDir, 'sync-action-worker.js'),
+      script: path.join(appDir, 'workers', 'sync-action-worker.js'),
       cwd: appDir,
       instances: 1,
       autorestart: true,
@@ -36,7 +36,7 @@ module.exports = {
     },
     {
       name: 'gmail-pubsub-worker',
-      script: path.join(appDir, 'gmail-pubsub-worker.js'),
+      script: path.join(appDir, 'workers', 'gmail-pubsub-worker.js'),
       cwd: appDir,
       instances: 1,
       autorestart: true,
@@ -46,7 +46,7 @@ module.exports = {
     },
     {
       name: 'mailcow-imap-worker',
-      script: path.join(appDir, 'mailcow-imap-worker.js'),
+      script: path.join(appDir, 'workers', 'mailcow-imap-worker.js'),
       cwd: appDir,
       instances: 1,
       autorestart: true,
@@ -56,12 +56,12 @@ module.exports = {
     },
     {
       name: 'maintenance-queue-worker',
-      script: path.join(appDir, 'maintenance-queue-worker.js'),
+      script: path.join(appDir, 'workers', 'maintenance-queue-worker.js'),
       cwd: appDir,
       instances: 1,
-      autorestart: false,       // NEVER auto-restart mid-job — no checkpoint/resume logic
+      autorestart: false,       // NEVER auto-restart mid-job â€” no checkpoint/resume logic
       watch: false,             // File saves must NOT restart during 3-crore runs
-      max_memory_restart: '3G', // Safety net — chunk strategy uses ~50MB normally
+      max_memory_restart: '3G', // Safety net â€” chunk strategy uses ~50MB normally
       kill_timeout: 30000,      // 30s grace period for current chunk to finish
       env: {
         NODE_ENV: 'production',

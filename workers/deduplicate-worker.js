@@ -22,7 +22,7 @@
 
 require('dotenv').config({ path: require('path').resolve(__dirname, '.env') });
 const { MongoClient } = require('mongodb');
-const deduplicateQueue = require('./queues/deduplicateQueue');
+const deduplicateQueue = require('../queues/deduplicateQueue');
 
 const DELETE_BATCH_SIZE = 5000;
 const PROGRESS_INTERVAL = 50000; // Report every 50K docs processed
@@ -34,7 +34,7 @@ const COLLATION = { locale: 'en', strength: 2 }; // Case-insensitive
 async function getMongoConnection(databaseName) {
   let mongoUrl, dbName;
   try {
-    const { getConnectionConfig } = require('./src/config/database');
+    const { getConnectionConfig } = require('../src/config/database');
     const connectionName = databaseName === 'nextjs_stu' ? 'central' : databaseName;
     const config = getConnectionConfig(connectionName);
     mongoUrl = config.uri;

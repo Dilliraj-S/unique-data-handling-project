@@ -29,7 +29,7 @@
 require('dotenv').config();
 const Queue = require('bull');
 const { MongoClient } = require('mongodb');
-const { getConnectionConfig } = require('./src/config/database.js');
+const { getConnectionConfig } = require('../src/config/database.js');
 const fs = require('fs');
 const path = require('path');
 

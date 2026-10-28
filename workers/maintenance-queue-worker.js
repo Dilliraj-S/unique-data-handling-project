@@ -57,7 +57,7 @@ maintenanceQueue.process('duplicate-removal', 1, async (job) => {
   try {
     await job.progress(0);
 
-    const DuplicateRemovalService = require('./services/DuplicateRemovalService');
+    const DuplicateRemovalService = require('../services/DuplicateRemovalService');
 
     const service = new DuplicateRemovalService({
       mainDatabase,
@@ -74,7 +74,7 @@ maintenanceQueue.process('duplicate-removal', 1, async (job) => {
 
     // FIX Check 4.2: DuplicateRemovalService already calls updateProgress(100, 'completed').
     // We only need completeProcess() here to set the final status in process_logs.
-    const JobService = require('./services/JobService');
+    const JobService = require('../services/JobService');
     const jobService = new JobService();
 
     await jobService.completeProcess(processId, {
@@ -93,7 +93,7 @@ maintenanceQueue.process('duplicate-removal', 1, async (job) => {
     
     // Update job service with failure
     try {
-      const JobService = require('./services/JobService');
+      const JobService = require('../services/JobService');
       const jobService = new JobService();
       await jobService.failProcess(processId, error, {
         total: 0,

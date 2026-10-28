@@ -17,8 +17,8 @@ import 'dotenv/config';
 import { getDb, getCollection } from './src/lib/mongodb.js';
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
-const DomainEnrichmentAgent = require('./src/services/DomainEnrichmentAgent.js');
-const HeadlessScraperService = require('./src/services/HeadlessScraperService.js');
+const DomainEnrichmentAgent = require('../src/services/DomainEnrichmentAgent.js');
+const HeadlessScraperService = require('../src/services/HeadlessScraperService.js');
 
 // Verify the module loaded correctly
 if (!DomainEnrichmentAgent || !DomainEnrichmentAgent.enrichDomain) {

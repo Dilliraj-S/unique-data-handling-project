@@ -13,7 +13,7 @@ const { MongoClient } = require('mongodb');
 // Dynamic import for ES6 database config (same pattern as ProcessFlowHelper.js)
 let getConnectionConfig;
 try {
-  const dbModule = require('./src/config/database.js');
+  const dbModule = require('../src/config/database.js');
   getConnectionConfig = dbModule.getConnectionConfig || dbModule.default?.getConnectionConfig;
 } catch (e) {
   // Fallback for direct execution
@@ -92,7 +92,7 @@ processFlowQueue.process('process-flow', 1, async (job) => {
       started_at: new Date()
     });
     
-    const ProcessFlowHelper = require('./src/application/Services/ProcessFlowHelper.js');
+    const ProcessFlowHelper = require('../src/application/Services/ProcessFlowHelper.js');
     const flowData = job.data;
     const processMode = flowData.process_mode || 'flow'; // 'flow' = master flow, 'workflow' = single workflow
     
@@ -139,7 +139,7 @@ processFlowQueue.process('process-flow', 1, async (job) => {
     if (processMode === 'workflow') {
       // Single workflow mode - use WorkFlowService
       console.log(`📦 Using WorkFlowService for single workflow processing`);
-      const WorkFlowService = require('./src/application/Services/WorkFlowService.js').default;
+      const WorkFlowService = require('../src/application/Services/WorkFlowService.js').default;
       const service = new WorkFlowService();
       
       // For workflow mode, only process the first workflow
@@ -160,7 +160,7 @@ processFlowQueue.process('process-flow', 1, async (job) => {
     } else {
       // Master flow mode - use MasterFlowService
       console.log(`📦 Using MasterFlowService for master flow processing`);
-      const MasterFlowService = require('./src/application/Services/MasterFlowService.js').default;
+      const MasterFlowService = require('../src/application/Services/MasterFlowService.js').default;
       const service = new MasterFlowService();
       
       // Update progress before starting

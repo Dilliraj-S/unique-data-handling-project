@@ -15,8 +15,8 @@
 require('dotenv').config();
 const Queue = require('bull');
 const { MongoClient, ObjectId } = require('mongodb');
-const SendDriftEmailJob = require('./services/DriftEmail/SendDriftEmailJob');
-const TrackDriftRepliesJob = require('./services/DriftEmail/TrackDriftRepliesJob');
+const SendDriftEmailJob = require('../services/DriftEmail/SendDriftEmailJob');
+const TrackDriftRepliesJob = require('../services/DriftEmail/TrackDriftRepliesJob');
 
 // Configuration - same as email-delivery-worker
 const CONCURRENCY = parseInt(process.env.DRIFT_CONCURRENCY, 10) || 50;
@@ -147,7 +147,7 @@ async function pollAndEnqueue() {
             { $set: { status: 'dispatching', updated_at: now } }
           );
           
-          const DispatchDriftSequenceJob = require('./services/DriftEmail/DispatchDriftSequenceJob');
+          const DispatchDriftSequenceJob = require('../services/DriftEmail/DispatchDriftSequenceJob');
           const dispatchJob = new DispatchDriftSequenceJob();
           await dispatchJob.dispatch(seq.previous_sequence_id.toString());
           await dispatchJob.close();

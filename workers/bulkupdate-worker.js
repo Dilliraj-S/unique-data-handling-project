@@ -17,7 +17,7 @@
 require('dotenv').config();
 const Queue = require('bull');
 const { MongoClient } = require('mongodb');
-const { getConnectionConfig } = require('./src/config/database.js');
+const { getConnectionConfig } = require('../src/config/database.js');
 
 const REDIS_CONFIG = {
   host: process.env.REDIS_HOST || 'localhost',

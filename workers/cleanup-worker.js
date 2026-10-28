@@ -14,7 +14,7 @@
 
 require('dotenv').config({ path: require('path').resolve(__dirname, '.env') });
 const { MongoClient } = require('mongodb');
-const cleanupQueue = require('./queues/cleanupQueue');
+const cleanupQueue = require('../queues/cleanupQueue');
 
 // Batch size for bulkWrite operations
 // 5000 is optimal: large enough for throughput, small enough for memory
@@ -30,7 +30,7 @@ async function getMongoConnection(databaseName) {
   // Use shared config if available
   let mongoUrl, dbName;
   try {
-    const { getConnectionConfig } = require('./config/database');
+    const { getConnectionConfig } = require('../config/database');
     const connectionName = databaseName === 'nextjs_stu' ? 'central' : databaseName;
     const config = getConnectionConfig(connectionName);
     mongoUrl = config.uri;

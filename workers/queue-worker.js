@@ -14,9 +14,9 @@
 
 require('dotenv').config();
 const Queue = require('bull');
-const ImportService = require('./services/ImportService');
-const { collectionLockService } = require('./services/CollectionLockService');
-const { createLogger } = require('./services/Logger');
+const ImportService = require('../services/ImportService');
+const { collectionLockService } = require('../services/CollectionLockService');
+const { createLogger } = require('../services/Logger');
 
 const logger = createLogger('QueueWorker');
 
