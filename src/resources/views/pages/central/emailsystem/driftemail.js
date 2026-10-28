@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   CCard,
   CCardBody,
@@ -52,7 +52,9 @@ import {
   cilX,
   cilCheck,
   cilChevronBottom,
-  cilSearch
+  cilSearch,
+  cilLayers,
+  cilSpeedometer
 } from '@coreui/icons';
 import axios from 'axios';
 import AuthService from 'src/application/Services/AuthService';
@@ -61,403 +63,7 @@ import { useNavigate } from 'react-router-dom';
 import moment from 'moment-timezone';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
-
-// --- Custom Styles from Blade File ---
-const customStyles = `
-  /* ============================================
-     MODERN SET TABS - Card Style Design
-     ============================================ */
-  .set-tabs-container {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    border-radius: 16px;
-    margin-bottom: 20px;
-    flex-wrap: wrap;
-    border: 1px solid #e2e8f0;
-  }
-
-  .set-tab {
-    padding: 12px 20px;
-    border-radius: 12px;
-    font-weight: 600;
-    font-size: 14px;
-    color: #64748b;
-    background: transparent;
-    border: 2px solid transparent;
-    cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    position: relative;
-    min-width: 100px;
-  }
-
-  .set-tab:hover:not(.active) {
-    background: rgba(255, 255, 255, 0.9);
-    color: #1db4cd;
-    transform: translateY(-1px);
-  }
-
-  .set-tab.active {
-    background: white;
-    color: #1db4cd;
-    border-color: #1db4cd;
-    box-shadow: 0 4px 12px rgba(29, 180, 205, 0.15);
-  }
-
-  .set-tab .delete-icon {
-    opacity: 0;
-    transition: opacity 0.2s ease;
-    padding: 4px;
-    border-radius: 6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .set-tab:hover .delete-icon,
-  .set-tab.active .delete-icon {
-    opacity: 0.6;
-  }
-
-  .set-tab .delete-icon:hover {
-    opacity: 1;
-    background: rgba(239, 68, 68, 0.1);
-    color: #ef4444;
-  }
-
-  /* ============================================
-     MODERN SEQUENCE TABS - Segmented Control
-     ============================================ */
-  .sequence-tabs-wrapper {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 24px;
-    gap: 16px;
-    flex-wrap: wrap;
-  }
-
-  .sequence-tabs-container {
-    display: inline-flex;
-    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-    border-radius: 14px;
-    padding: 6px;
-    gap: 6px;
-    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
-  }
-
-  .sequence-tab {
-    padding: 10px 22px;
-    border-radius: 10px;
-    font-weight: 500;
-    font-size: 14px;
-    color: #64748b;
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    white-space: nowrap;
-  }
-
-  .sequence-tab:hover:not(.active) {
-    background: rgba(255, 255, 255, 0.7);
-    color: #1db4cd;
-  }
-
-  .sequence-tab.active {
-    background: white;
-    color: #0f172a;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    font-weight: 600;
-  }
-
-  /* Status Badge Dot */
-  .sequence-status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    display: inline-block;
-    flex-shrink: 0;
-  }
-
-  .sequence-status-dot.draft { background: #94a3b8; }
-  .sequence-status-dot.scheduled { background: #f59e0b; }
-  .sequence-status-dot.running, 
-  .sequence-status-dot.sending { 
-    background: #22c55e; 
-    animation: statusPulse 1.5s ease-in-out infinite; 
-  }
-  .sequence-status-dot.completed { background: #3b82f6; }
-  .sequence-status-dot.failed { background: #ef4444; }
-  .sequence-status-dot.paused { background: #f97316; }
-
-  @keyframes statusPulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.6; transform: scale(1.2); }
-  }
-
-  /* Add Sequence Button */
-  .add-sequence-btn {
-    width: 42px;
-    height: 42px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, #1db4cd 0%, #0891b2 100%);
-    color: white;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 4px 12px rgba(29, 180, 205, 0.25);
-  }
-
-  .add-sequence-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 16px rgba(29, 180, 205, 0.35);
-  }
-
-  .add-sequence-btn:active {
-    transform: translateY(0);
-  }
-
-  /* Active Set Header */
-  .active-set-header {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 8px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid #e2e8f0;
-  }
-
-  .active-set-label {
-    font-size: 13px;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-weight: 500;
-  }
-
-  .active-set-name {
-    font-size: 18px;
-    font-weight: 700;
-    color: #1db4cd;
-  }
-
-  /* Legacy compatibility - keep old classes working */
-  .drift-nav-pills {
-    display: none; /* Hide old nav pills */
-  }
-  
-  /* Stats Card */
-  .stats-card {
-      background: white;
-      border-radius: 8px;
-      padding: 15px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-      margin-bottom: 20px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 15px;
-  }
-
-  .report-category {
-      flex: 1;
-      min-width: 120px;
-      text-align: center;
-      padding: 10px;
-      border-radius: 6px;
-      background: white;
-      border: 1px solid #e2e8f0;
-      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  }
-  
-  .report-category span {
-      display: block;
-      font-size: 20px;
-      font-weight: 700;
-  }
-  
-  .report-category div {
-      font-size: 12px;
-      color: #6b7280;
-      margin-top: 4px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-  }
-
-  /* Glassy Button */
-  .glassy-cute-btn {
-      border: none;
-      background: rgba(255, 255, 255, 0.28);
-      border-radius: 50%;
-      padding: 0;
-      width: 32px;
-      height: 32px; /* Smaller than original */
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 2px 12px 0 rgba(30, 180, 205, 0.11);
-      backdrop-filter: blur(6px);
-      cursor: pointer;
-  }
-  
-  .glassy-cute-btn-inner {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, rgba(29, 180, 205, 0.18) 0%, rgba(255, 255, 255, 0.35) 100%);
-  }
-  
-  .cute-refresh-icon {
-      color: #1db4cd;
-      font-size: 1.2em;
-  }
-  
-  /* Sharp Button Style from Blade */
-  .sharp-btn {
-      border-radius: 6px;
-      font-weight: 600; 
-      letter-spacing: 0.5px;
-      box-shadow: 0 1px 4px rgba(30,64,175,0.06);
-      padding: 8px 20px;
-  }
-
-  /* Add Sequence Button */
-  .add-sequence-btn-wrapper {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 40px;
-      cursor: pointer;
-      color: #1db4cd;
-  }
-  .add-sequence-btn-wrapper:hover {
-       background: rgba(0,0,0,0.05);
-       border-radius: 50%;
-  }
-  
-  /* Tab Content Area */
-  .drift-tab-content {
-      border: 1px solid #d1d1d1;
-      border-top: none;
-      border-radius: 0 0 8px 8px;
-      background: white;
-      padding: 24px;
-  }
-  .drift-tab-content {
-      border: 1px solid #d1d1d1;
-      border-top: none;
-      border-radius: 0 0 8px 8px;
-      background: white;
-      padding: 24px;
-  }
-
-  /* MultiSelect Chips Styling */
-  .multiselect-container {
-      position: relative;
-      font-size: 14px;
-  }
-  .multiselect-input {
-      border: 1px solid #b1b7c1;
-      border-radius: 6px;
-      padding: 6px 12px;
-      min-height: 42px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      align-items: center;
-      background: white;
-      cursor: text;
-      transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-  }
-  .multiselect-input:focus-within {
-      border-color: #8bbafe;
-      box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-      outline: 0;
-  }
-  .chip {
-      background-color: #e0e7ff;
-      color: #3b82f6;
-      padding: 2px 8px;
-      border-radius: 16px;
-      display: inline-flex;
-      align-items: center;
-      font-weight: 500;
-      font-size: 13px;
-  }
-  .chip-remove {
-      cursor: pointer;
-      margin-left: 6px;
-      display: flex;
-      align-items: center;
-      opacity: 0.6;
-  }
-  .chip-remove:hover {
-      opacity: 1;
-  }
-  .multiselect-search {
-      border: none;
-      outline: none;
-      flex: 1;
-      min-width: 60px;
-      background: transparent;
-      padding: 2px 0;
-      font-size: 14px;
-      color: #4f5d75;
-  }
-  .multiselect-dropdown {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      background: white;
-      border: 1px solid #c4c9d0;
-      border-radius: 6px;
-      margin-top: 4px;
-      max-height: 250px;
-      overflow-y: auto;
-      z-index: 1000;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      padding: 6px 0;
-  }
-  .multiselect-option {
-      padding: 8px 16px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      transition: background 0.1s;
-      color: #4b5563;
-  }
-  .multiselect-option:hover {
-      background-color: #f3f4f6;
-      color: #1f2937;
-  }
-  .multiselect-option.selected {
-      background-color: #eef2ff;
-      color: #4f46e5;
-      font-weight: 500;
-  }
-  .multiselect-checkbox {
-      margin-right: 10px;
-      accent-color: #4f46e5;
-      width: 16px;
-      height: 16px;
-  }
-`;
+import styles from './driftemail.module.css';
 
 /**
  * Custom MultiSelect Component with Chips
@@ -495,9 +101,9 @@ const MultiSelectChips = ({ options, value = [], onChange, placeholder = "Select
     );
 
     return (
-        <div className="multiselect-container" ref={wrapperRef}>
+        <div className={styles.multiselectContainer} ref={wrapperRef}>
             <div 
-                className="multiselect-input" 
+                className={styles.multiselectInput} 
                 onClick={() => {
                     setIsOpen(true);
                     inputRef.current?.focus();
@@ -506,9 +112,9 @@ const MultiSelectChips = ({ options, value = [], onChange, placeholder = "Select
                 {value.map(val => {
                     const opt = options.find(o => o.value === val);
                     return opt ? (
-                        <span key={val} className="chip">
+                        <span key={val} className={styles.chip}>
                             {opt.label}
-                            <span className="chip-remove" onClick={(e) => removeChip(e, val)}>
+                            <span className={styles.chipRemove} onClick={(e) => removeChip(e, val)}>
                                 <CIcon icon={cilX} size="sm" style={{width:'12px', height:'12px'}}/>
                             </span>
                         </span>
@@ -516,7 +122,7 @@ const MultiSelectChips = ({ options, value = [], onChange, placeholder = "Select
                 })}
                 <input 
                     ref={inputRef}
-                    className="multiselect-search"
+                    className={styles.multiselectSearch}
                     value={searchTerm}
                     onChange={(e) => {
                         setSearchTerm(e.target.value);
@@ -531,19 +137,19 @@ const MultiSelectChips = ({ options, value = [], onChange, placeholder = "Select
             </div>
             
             {isOpen && (
-                <div className="multiselect-dropdown">
+                <div className={styles.multiselectDropdown}>
                     {filteredOptions.length > 0 ? (
                         filteredOptions.map(opt => (
                             <div 
                                 key={opt.value} 
-                                className={`multiselect-option ${value.includes(opt.value) ? 'selected' : ''}`}
+                                className={`${styles.multiselectOption} ${value.includes(opt.value) ? styles.multiselectOptionSelected : ''}`}
                                 onClick={() => handleSelect(opt.value)}
                             >
                                 <input 
                                     type="checkbox" 
                                     checked={value.includes(opt.value)} 
                                     readOnly 
-                                    className="multiselect-checkbox"
+                                    style={{ marginRight: '10px', accentColor: '#6366f1' }}
                                 />
                                 {opt.label}
                             </div>
@@ -551,6 +157,280 @@ const MultiSelectChips = ({ options, value = [], onChange, placeholder = "Select
                     ) : (
                         <div className="p-3 text-center text-muted text-sm">No results found</div>
                     )}
+                </div>
+            )}
+        </div>
+    );
+};
+
+/**
+ * Modern Grouped Multi-Select Dropdown for Email Senders
+ */
+const EmailSenderDropdown = ({ regions = [], emailAccounts = [], value = [], onChange }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [searchQuery, setSearchQuery] = useState('');
+    const containerRef = useRef(null);
+
+    // Close on click outside
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (containerRef.current && !containerRef.current.contains(e.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // Get all unique emails
+    const allEmails = useMemo(() => {
+        if (regions && regions.length > 0) {
+            const list = [];
+            regions.forEach(r => {
+                (r.emails || []).forEach(em => {
+                    if (!list.includes(em)) list.push(em);
+                });
+            });
+            return list;
+        }
+        return (emailAccounts || []).map(acc => acc.email || acc).filter(Boolean);
+    }, [regions, emailAccounts]);
+
+    // Filter regions & emails based on search query
+    const filteredRegions = useMemo(() => {
+        const q = searchQuery.toLowerCase().trim();
+        if (!q) return regions;
+        return regions.map(r => ({
+            ...r,
+            emails: (r.emails || []).filter(em => 
+                em.toLowerCase().includes(q) || r.name.toLowerCase().includes(q)
+            )
+        })).filter(r => r.emails.length > 0);
+    }, [regions, searchQuery]);
+
+    const filteredAccounts = useMemo(() => {
+        const q = searchQuery.toLowerCase().trim();
+        if (!q) return emailAccounts;
+        return emailAccounts.filter(acc => {
+            const em = acc.email || acc;
+            return em.toLowerCase().includes(q);
+        });
+    }, [emailAccounts, searchQuery]);
+
+    const handleToggleEmail = (email) => {
+        if (value.includes(email)) {
+            onChange(value.filter(v => v !== email));
+        } else {
+            onChange([...value, email]);
+        }
+    };
+
+    const handleSelectAll = () => {
+        onChange([...allEmails]);
+    };
+
+    const handleDeselectAll = () => {
+        onChange([]);
+    };
+
+    const handleToggleRegion = (regionEmails) => {
+        const allRegionSelected = regionEmails.every(em => value.includes(em));
+        if (allRegionSelected) {
+            onChange(value.filter(v => !regionEmails.includes(v)));
+        } else {
+            const toAdd = regionEmails.filter(em => !value.includes(em));
+            onChange([...value, ...toAdd]);
+        }
+    };
+
+    const handleRemovePill = (e, email) => {
+        e.stopPropagation();
+        onChange(value.filter(v => v !== email));
+    };
+
+    const handleClearAll = (e) => {
+        e.stopPropagation();
+        onChange([]);
+    };
+
+    return (
+        <div className={styles.senderDropdownContainer} ref={containerRef}>
+            {/* Trigger Button */}
+            <div 
+                className={`${styles.senderDropdownTrigger} ${isOpen ? styles.senderDropdownTriggerOpen : ''}`}
+                onClick={() => setIsOpen(!isOpen)}
+                role="button"
+                tabIndex={0}
+            >
+                <div className={styles.senderDropdownValueArea}>
+                    {value.length === 0 ? (
+                        <span className={styles.senderDropdownPlaceholder}>
+                            -- Select Email Senders --
+                        </span>
+                    ) : (
+                        <>
+                            {value.slice(0, 2).map(email => (
+                                <span key={email} className={styles.senderPill}>
+                                    <span style={{ maxWidth: '170px', overflow: 'hidden', textOverflow: 'ellipsis', display: 'inline-block' }}>
+                                        {email}
+                                    </span>
+                                    <span 
+                                        className={styles.senderPillRemove}
+                                        onClick={(e) => handleRemovePill(e, email)}
+                                        title="Remove"
+                                    >
+                                        <CIcon icon={cilX} size="sm" style={{ width: 10, height: 10 }} />
+                                    </span>
+                                </span>
+                            ))}
+                            {value.length > 2 && (
+                                <span className={styles.senderMoreBadge}>
+                                    +{value.length - 2} more ({value.length} total)
+                                </span>
+                            )}
+                        </>
+                    )}
+                </div>
+
+                <div className={styles.senderDropdownControls}>
+                    {value.length > 0 && (
+                        <button 
+                            type="button" 
+                            className={styles.senderClearAllBtn}
+                            onClick={handleClearAll}
+                            title="Clear all selected"
+                        >
+                            <CIcon icon={cilX} size="sm" style={{ width: 13, height: 13 }} />
+                        </button>
+                    )}
+                    <span className={`${styles.senderChevron} ${isOpen ? styles.senderChevronRotated : ''}`}>
+                        <CIcon icon={cilChevronBottom} size="sm" style={{ width: 14, height: 14 }} />
+                    </span>
+                </div>
+            </div>
+
+            {/* Dropdown Menu */}
+            {isOpen && (
+                <div className={styles.senderDropdownMenu}>
+                    {/* Search Bar */}
+                    <div className={styles.senderDropdownSearchBox}>
+                        <input 
+                            type="text"
+                            className={styles.senderSearchInput}
+                            placeholder="Search sender email or region..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                            autoFocus
+                        />
+                    </div>
+
+                    {/* Quick Actions Row */}
+                    <div className={styles.senderDropdownActionsRow}>
+                        <div className="d-flex align-items-center gap-2">
+                            <button 
+                                type="button" 
+                                className={styles.senderActionBtn}
+                                onClick={handleSelectAll}
+                            >
+                                Select All ({allEmails.length})
+                            </button>
+                            <span style={{ color: 'rgba(255,255,255,0.2)' }}>|</span>
+                            <button 
+                                type="button" 
+                                className={styles.senderActionBtn}
+                                onClick={handleDeselectAll}
+                            >
+                                Clear
+                            </button>
+                        </div>
+                        <span className={styles.senderStatusCount}>
+                            {value.length} of {allEmails.length} selected
+                        </span>
+                    </div>
+
+                    {/* Scrollable List */}
+                    <div className={styles.senderOptionsScroll}>
+                        {regions && regions.length > 0 ? (
+                            filteredRegions.length > 0 ? (
+                                filteredRegions.map(region => {
+                                    const regionEmails = region.emails || [];
+                                    const selectedInRegion = regionEmails.filter(em => value.includes(em)).length;
+                                    const isAllRegionSelected = regionEmails.length > 0 && selectedInRegion === regionEmails.length;
+
+                                    return (
+                                        <div key={region.name}>
+                                            <div className={styles.senderGroupHeader}>
+                                                <div className={styles.senderGroupTitle}>
+                                                    <span>{region.name}</span>
+                                                    <span className={styles.senderGroupBadge}>
+                                                        {selectedInRegion}/{regionEmails.length}
+                                                    </span>
+                                                </div>
+                                                <button 
+                                                    type="button" 
+                                                    className={styles.senderGroupToggleBtn}
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleToggleRegion(regionEmails);
+                                                    }}
+                                                >
+                                                    {isAllRegionSelected ? 'Deselect Region' : 'Select Region'}
+                                                </button>
+                                            </div>
+
+                                            {regionEmails.map(email => {
+                                                const isSelected = value.includes(email);
+                                                return (
+                                                    <div 
+                                                        key={email}
+                                                        className={`${styles.senderOptionItem} ${isSelected ? styles.senderOptionItemSelected : ''}`}
+                                                        onClick={() => handleToggleEmail(email)}
+                                                    >
+                                                        <input 
+                                                            type="checkbox"
+                                                            checked={isSelected}
+                                                            onChange={() => {}}
+                                                            className={styles.senderOptionCheckbox}
+                                                        />
+                                                        <span className={styles.senderOptionEmail}>{email}</span>
+                                                        <span className={styles.senderOptionDot} />
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    );
+                                })
+                            ) : (
+                                <div className={styles.senderEmptyNotice}>No senders match "{searchQuery}"</div>
+                            )
+                        ) : (
+                            filteredAccounts.length > 0 ? (
+                                filteredAccounts.map(acc => {
+                                    const email = acc.email || acc;
+                                    const isSelected = value.includes(email);
+                                    return (
+                                        <div 
+                                            key={email}
+                                            className={`${styles.senderOptionItem} ${isSelected ? styles.senderOptionItemSelected : ''}`}
+                                            onClick={() => handleToggleEmail(email)}
+                                        >
+                                            <input 
+                                                type="checkbox"
+                                                checked={isSelected}
+                                                onChange={() => {}}
+                                                className={styles.senderOptionCheckbox}
+                                            />
+                                            <span className={styles.senderOptionEmail}>{email}</span>
+                                            <span className={styles.senderOptionDot} />
+                                        </div>
+                                    );
+                                })
+                            ) : (
+                                <div className={styles.senderEmptyNotice}>No senders available</div>
+                            )
+                        )}
+                    </div>
                 </div>
             )}
         </div>
@@ -1320,445 +1200,647 @@ const Driftemail = () => {
     // Helper
     const getManualAssignedCount = () => {
         return Object.values(assignmentModalData.manualAssignments).reduce((a, b) => a + (parseInt(b) || 0), 0);
-    };
-
-    if (loading) return <div className="text-center p-5"><CSpinner color="primary"/></div>;
+    };    if (loading) return (
+      <div className={styles.container} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+        <div style={{ textAlign: 'center' }}>
+          <CSpinner color="primary" style={{ width: '3rem', height: '3rem', marginBottom: '1rem' }} />
+          <div style={{ color: '#94a3b8', fontSize: '0.9rem' }}>Loading Campaign Sequences & Quotas...</div>
+        </div>
+      </div>
+    );
     const currentSeqData = activeSequenceId ? sequenceData[activeSequenceId] : null;
 
     return (
-        <>
-            <style>{customStyles}</style>
-
-            <CCard className="mb-4 shadow-sm border-0">
-                <CCardHeader 
-                   className="d-flex align-items-center justify-content-between px-4 py-3"
-                   style={{ background: '#5856D6', borderBottom: '2px solid #e0e7ef', color: '#fff' }}
-                >
-                    <span style={{ fontSize: '1.5rem', fontWeight: 700, letterSpacing: '0.5px' }}>
-                        Drift Email Campaigns
-                    </span>
-                    <div className="d-flex gap-2">
-                         <CButton className="sharp-btn bg-white text-info border-white" onClick={() => setModalState({...modalState, quota: true})}>
-                             {quota.total_used} / {quota.total_limit} Used
-                         </CButton>
-                         <CButton className="sharp-btn bg-white text-info border-white" onClick={handleSaveAll} disabled={saving}>
-                             {saving ? <CSpinner size="sm"/> : 'Save All Sequences'}
-                         </CButton>
-                         <CButton className="sharp-btn bg-white text-info border-white" onClick={() => setModalState({...modalState, newSet: true})}>
-                             New Set
-                         </CButton>
+        <div className={styles.container}>
+            {/* Header Row */}
+            <div className={styles.headerRow}>
+                <div className={styles.headerLeft}>
+                    <div className={styles.badgePill}>
+                        <span className={styles.pulseDot} />
+                        MULTI-STAGE CAMPAIGN ENGINE
                     </div>
-                </CCardHeader>
+                    <h1 className={styles.mainTitle}>Drift Email Campaigns</h1>
+                    <p className={styles.subTitle}>
+                        Automate progressive multi-touch sequences, configure custom batch assignments, and monitor real-time sender deliverability.
+                    </p>
+                </div>
+                <div className={styles.headerActions}>
+                    <button className={styles.quotaPillBtn} onClick={() => setModalState({...modalState, quota: true})}>
+                        <CIcon icon={cilChart} className="me-1" />
+                        <span className={styles.quotaLabel}>Daily Quota:</span>
+                        <span className={styles.quotaValue}>{quota.total_used} / {quota.total_limit || '∞'} Sent</span>
+                    </button>
+                    <button className={styles.refreshBtn} onClick={() => { fetchSets(); fetchQuotaInfo(); if (activeSequenceId) fetchReports(activeSequenceId); }}>
+                        <CIcon icon={cilReload} />
+                        Refresh
+                    </button>
+                    <button className={styles.saveAllBtn} onClick={handleSaveAll} disabled={saving}>
+                        {saving ? <CSpinner size="sm" className="me-1"/> : <CIcon icon={cilSave} className="me-1"/>}
+                        Save All Sequences
+                    </button>
+                    <button className={styles.actionBtn} onClick={() => setModalState({...modalState, newSet: true})}>
+                        <CIcon icon={cilPlus} />
+                        New Set
+                    </button>
+                </div>
+            </div>
 
-                <CCardBody>
-                     {/* Modern Set Tabs */}
-                     <div className="set-tabs-container">
-                         {sets.map(set => (
-                             <button
-                               key={set.id}
-                               className={`set-tab ${activeSetId === set.id ? 'active' : ''}`}
-                               onClick={() => setActiveSetId(set.id)}
-                             >
-                                 <span>{set.set_name}</span>
-                                 <span 
-                                   className="delete-icon"
-                                   onClick={(e) => {
-                                       e.stopPropagation();
-                                       setDeleteTarget(set.id);
-                                       setModalState({...modalState, deleteSet: true});
-                                   }}
-                                 >
-                                     <CIcon icon={cilTrash} size="sm"/>
-                                 </span>
-                             </button>
-                         ))}
-                     </div>
+            {/* KPI Summary Cards */}
+            <div className={styles.statsGrid}>
+                <div className={styles.statCard}>
+                    <div className={`${styles.statIconWrapper} ${styles.statIconIndigo}`}>
+                        <CIcon icon={cilLayers} />
+                    </div>
+                    <div className={styles.statInfo}>
+                        <div className={styles.statValue}>{sets.length}</div>
+                        <div className={styles.statLabel}>Campaign Sets</div>
+                        <div className={styles.statSub}>Configured drip sequence sets</div>
+                    </div>
+                </div>
 
-                     {/* Active Set Content */}
-                     {activeSetId && (
-                         <div className="drift-tab-content">
-                             {/* Active Set Header */}
-                             <div className="active-set-header">
-                                 <span className="active-set-label">Active Set</span>
-                                 <span className="active-set-name">{sets.find(s=>s.id === activeSetId)?.set_name}</span>
-                             </div>
-                             
-                             {/* Modern Sequence Tabs */}
-                             <div className="sequence-tabs-wrapper">
-                                 <div className="sequence-tabs-container">
-                                     {sequences.map((seq, idx) => (
-                                         <button
-                                           key={seq.id}
-                                           className={`sequence-tab ${activeSequenceId === seq.id ? 'active' : ''}`}
-                                           onClick={() => {
-                                               setActiveSequenceId(seq.id);
-                                               setActiveSequenceIndex(idx);
-                                           }}
-                                         >
-                                             {seq.name || `Sequence ${idx+1}`}
-                                             <span className={`sequence-status-dot ${seq.status || 'draft'}`}></span>
-                                         </button>
-                                     ))}
-                                     <button className="add-sequence-btn" onClick={handleAddSequence} title="Add Sequence">
-                                         <CIcon icon={cilPlus} size="lg"/>
-                                     </button>
-                                 </div>
-                                 
-                                 <CButton color="primary" onClick={handleAddSequence}>New Sequence</CButton>
-                             </div>
+                <div className={styles.statCard}>
+                    <div className={`${styles.statIconWrapper} ${styles.statIconViolet}`}>
+                        <CIcon icon={cilClock} />
+                    </div>
+                    <div className={styles.statInfo}>
+                        <div className={styles.statValue}>{sequences.length}</div>
+                        <div className={styles.statLabel}>Active Sequences</div>
+                        <div className={styles.statSub}>Progressive touchpoint stages</div>
+                    </div>
+                </div>
 
-                             {/* Sequence Form */}
-                             {currentSeqData && (
-                                 <div className="card border p-3">
-                                     <div className="d-flex justify-content-between card-header bg-transparent border-0 ps-0 pt-0">
-                                         <h5 className="mb-0">{currentSeqData.name}</h5>
-                                         <CButton 
-                                            color="danger" 
-                                            size="sm" 
-                                            variant="ghost" 
-                                            onClick={() => {
-                                                setDeleteTarget(currentSeqData.id);
-                                                setModalState({...modalState, deleteSequence: true});
-                                            }}
-                                         >
-                                            Delete Sequence
-                                         </CButton>
-                                     </div>
-                                     
-                                     <CForm className="row g-3 mt-1">
-                                         <CCol md={6}>
-                                             <CFormLabel>Sequence Name</CFormLabel>
-                                             <CFormInput value={currentSeqData.name || ''} onChange={(e) => updateSeqField('name', e.target.value)} />
-                                         </CCol>
-                                         <CCol md={6}>
-                                             <CFormLabel>Subject</CFormLabel>
-                                             <CFormInput value={currentSeqData.subject || ''} onChange={(e) => updateSeqField('subject', e.target.value)} />
-                                         </CCol>
+                <div className={styles.statCard}>
+                    <div className={`${styles.statIconWrapper} ${styles.statIconEmerald}`}>
+                        <CIcon icon={cilEnvelopeClosed} />
+                    </div>
+                    <div className={styles.statInfo}>
+                        <div className={styles.statValue}>{emailAccounts.length || 20}</div>
+                        <div className={styles.statLabel}>Connected Inboxes</div>
+                        <div className={styles.statSub}>High-deliverability sender pool</div>
+                    </div>
+                </div>
 
-                                         <CCol md={6}>
-                                             <CFormLabel>Select Template</CFormLabel>
-                                             <CInputGroup>
-                                                 <CFormSelect value={currentSeqData.template_id || ''} onChange={handleTemplateChange}>
-                                                     <option value="">-- Select Template --</option>
-                                                     {templates.map(t => <option key={t.id || t._id} value={t.id || t._id}>{t.title}</option>)}
-                                                 </CFormSelect>
-                                                 <CButton variant="outline" color="primary" onClick={handleAddTemplate}>Create Template</CButton>
-                                             </CInputGroup>
-                                         </CCol>
+                <div className={styles.statCard}>
+                    <div className={`${styles.statIconWrapper} ${styles.statIconCyan}`}>
+                        <CIcon icon={cilChart} />
+                    </div>
+                    <div className={styles.statInfo}>
+                        <div className={styles.statValue}>
+                            {quota.total_limit > 0 ? `${Math.round(((quota.total_limit - quota.total_used) / quota.total_limit) * 100)}%` : '100%'}
+                        </div>
+                        <div className={styles.statLabel}>Daily Capacity</div>
+                        <div className={styles.statSub}>{quota.total_used} dispatched today</div>
+                    </div>
+                </div>
+            </div>
 
-                                         {activeSequenceIndex === 0 ? (
-                                             <>
-                                                 <CCol md={6}>
-                                                     <CFormLabel>Select Audience</CFormLabel>
-                                                     <CInputGroup>
-                                                         <CFormSelect value={currentSeqData.audience_id || ''} onChange={(e) => updateSeqField('audience_id', e.target.value)}>
-                                                             <option value="">-- Select Audience --</option>
-                                                             {audiences.map(a => <option key={a.id || a._id} value={a.id || a._id}>{a.name}</option>)}
-                                                         </CFormSelect>
-                                                         <CButton variant="outline" color="primary" onClick={() => setShowAudienceModal(true)}>Create Audience</CButton>
-                                                     </CInputGroup>
-                                                 </CCol>
-                                                 
-                                                 <CCol md={6}>
-                                                      <CFormLabel>Time Gap Between Batches (seconds) <CTooltip content="Time gap applies only between batches"><CIcon icon={cilInfo}/></CTooltip></CFormLabel>
-                                                      <CFormInput type="number" min="1" value={currentSeqData.time_gap || 5} onChange={(e) => updateSeqField('time_gap', parseInt(e.target.value))} />
-                                                 </CCol>
+            {/* Sets Navigation Bar */}
+            <div className={styles.setsBarWrapper}>
+                <div className={styles.setsBarLeft}>
+                    <span className={styles.setsBarLabel}>Drip Set Group:</span>
+                    {sets.map(set => (
+                        <button
+                            key={set.id}
+                            className={`${styles.setTab} ${activeSetId === set.id ? styles.setTabActive : ''}`}
+                            onClick={() => setActiveSetId(set.id)}
+                        >
+                            <span>{set.set_name}</span>
+                            <span 
+                                className={styles.setDeleteIcon}
+                                title="Delete Set"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setDeleteTarget(set.id);
+                                    setModalState({...modalState, deleteSet: true});
+                                }}
+                            >
+                                <CIcon icon={cilTrash} size="sm"/>
+                            </span>
+                        </button>
+                    ))}
+                    <button className={styles.newSetInlineBtn} onClick={() => setModalState({...modalState, newSet: true})}>
+                        <CIcon icon={cilPlus} size="sm" />
+                        New Set
+                    </button>
+                </div>
+            </div>
 
-                                                 <CCol md={6}>
-                                                     <CFormLabel>Assignment Mode</CFormLabel>
-                                                     <CInputGroup>
-                                                         <CFormSelect value={currentSeqData.assignment_mode || 'batch_size'} onChange={(e) => updateSeqField('assignment_mode', e.target.value)}>
-                                                             <option value="batch_size">Batch Size</option>
-                                                             <option value="manual_assign">Manual Assign</option>
-                                                         </CFormSelect>
-                                                         <CButton variant="outline" color="primary" onClick={openAssignmentModal}>Configure Assignment</CButton>
-                                                     </CInputGroup>
-                                                 </CCol>
-                                             </>
-                                         ) : (
-                                             <CCol md={6}>
-                                                 <CFormLabel>Select Report Filters (Sequence {activeSequenceIndex})</CFormLabel>
-                                                 <MultiSelectChips 
-                                                    options={CATEGORY_OPTIONS}
-                                                    value={currentSeqData.categories || []}
-                                                    onChange={(val) => updateSeqField('categories', val)}
-                                                    placeholder="Select report filters"
-                                                 />
-                                                 <small className="text-muted">Sequences will be sent to subscribers matching these criteria.</small>
-                                             </CCol>
-                                         )}
+            {/* Active Set Content */}
+            {activeSetId && (
+                <div className={styles.activeSetContainer}>
+                    <div className={styles.activeSetHeader}>
+                        <div className={styles.activeSetTitleInfo}>
+                            <span className={styles.activeSetBadge}>Active Pipeline</span>
+                            <h3 className={styles.activeSetName}>
+                                {sets.find(s => s.id === activeSetId)?.set_name || 'Campaign Pipeline'}
+                            </h3>
+                        </div>
+                        <div className="text-muted" style={{ fontSize: '0.85rem' }}>
+                            {sequences.length} sequence {sequences.length === 1 ? 'stage' : 'stages'} configured
+                        </div>
+                    </div>
 
-                                         {/* From Emails with Regions Support */}
-                                         <CCol md={6}>
-                                             <CFormLabel>From Email</CFormLabel>
-                                             <CFormSelect 
-                                                multiple 
-                                                value={currentSeqData.from_emails || []} 
-                                                onChange={(e) => updateSeqField('from_emails', Array.from(e.target.selectedOptions, o => o.value))}
-                                                style={{minHeight: '80px'}}
-                                             >
-                                                {regions.length > 0 ? (
-                                                    regions.map(region => (
-                                                      <optgroup key={region.name} label={`${region.name} (${region.emails.length} accounts)`}>
-                                                        {region.emails.map(email => (
-                                                          <option key={email} value={email}>
-                                                            {email}
-                                                          </option>
-                                                        ))}
-                                                      </optgroup>
-                                                    ))
-                                                ) : (
-                                                     // Fallback if no regions available
-                                                     emailAccounts.map(acc => <option key={acc.id} value={acc.email}>{acc.email}</option>)
-                                                )}
-                                             </CFormSelect>
-                                         </CCol>
+                    {/* Sequence Tabs Stepper */}
+                    <div className={styles.sequenceTabsWrapper}>
+                        <div className={styles.sequenceTabsGroup}>
+                            {sequences.map((seq, idx) => {
+                                const statusClassKey = seq.status ? 'status' + seq.status.charAt(0).toUpperCase() + seq.status.slice(1) : 'statusDraft';
+                                const statusClass = styles[statusClassKey] || styles.statusDraft;
+                                return (
+                                    <button
+                                        key={seq.id}
+                                        className={`${styles.sequenceTab} ${activeSequenceId === seq.id ? styles.sequenceTabActive : ''}`}
+                                        onClick={() => {
+                                            setActiveSequenceId(seq.id);
+                                            setActiveSequenceIndex(idx);
+                                        }}
+                                    >
+                                        <span>{seq.name || `Sequence ${idx + 1}`}</span>
+                                        <span className={`${styles.statusDot} ${statusClass}`} />
+                                    </button>
+                                );
+                            })}
+                            <button className={styles.addSequenceIconBtn} onClick={handleAddSequence} title="Add Sequence Stage">
+                                <CIcon icon={cilPlus} size="lg"/>
+                            </button>
+                        </div>
+                        <button className={styles.newSeqPrimaryBtn} onClick={handleAddSequence}>
+                            <CIcon icon={cilPlus} size="sm"/>
+                            New Sequence
+                        </button>
+                    </div>
 
-                                         <CCol md={6}>
-                                             <CFormLabel>Wait Time for Next Sequence</CFormLabel>
-                                             <CInputGroup>
-                                                 <CFormInput 
-                                                    type="number" 
-                                                    min="0" 
-                                                    value={currentSeqData.wait_time || 0} 
-                                                    onChange={(e) => updateSeqField('wait_time', parseInt(e.target.value))}
-                                                    disabled={activeSequenceIndex === sequences.length - 1} 
-                                                 />
-                                                 <CFormSelect 
-                                                    value={currentSeqData.wait_unit || 'minutes'} 
-                                                    onChange={(e) => updateSeqField('wait_unit', e.target.value)}
-                                                    disabled={activeSequenceIndex === sequences.length - 1}
-                                                 >
-                                                     {WAIT_UNIT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                                                 </CFormSelect>
-                                             </CInputGroup>
-                                         </CCol>
+                    {/* Sequence Form */}
+                    {currentSeqData && (
+                        <div className={styles.formCard}>
+                            <div className={styles.formCardHeader}>
+                                <div className={styles.formCardTitle}>
+                                    <span>{currentSeqData.name || `Sequence ${activeSequenceIndex + 1}`}</span>
+                                    <span className={styles.formCardBadge}>
+                                        Stage {activeSequenceIndex + 1} of {sequences.length}
+                                    </span>
+                                </div>
+                                <button 
+                                    className={styles.deleteSeqBtn}
+                                    onClick={() => {
+                                        setDeleteTarget(currentSeqData.id);
+                                        setModalState({...modalState, deleteSequence: true});
+                                    }}
+                                >
+                                    <CIcon icon={cilTrash} size="sm"/>
+                                    Delete Stage
+                                </button>
+                            </div>
 
-                                         <CCol xs={12} className="mt-4">
-                                             <div className="d-flex justify-content-center gap-2">
-                                                 {activeSequenceIndex === sequences.length - 1 && (
-                                                    <>
-                                                      <CButton color="primary" className="text-white" onClick={() => handleSendImmediately(currentSeqData.id)}>Send Immediately</CButton>
-                                                      <CButton color="primary" className="text-white" onClick={() => setModalState(prev => ({...prev, schedule: true}))}>Schedule</CButton>
-                                                    </>
-                                                 )}
-                                             </div>
-                                             <div className="d-flex justify-content-center gap-2 mt-2">
-                                                 <CButton variant="outline" color="secondary" disabled={activeSequenceIndex === 0} onClick={() => {
-                                                     handleSaveSequence(currentSeqData.id, 'prev');
-                                                 }}>Previous</CButton>
-                                                 
-                                                 {activeSequenceIndex < sequences.length - 1 ? (
-                                                     <CButton variant="outline" color="secondary" onClick={() => {
-                                                         handleSaveSequence(currentSeqData.id, 'next');
-                                                     }}>Next</CButton>
-                                                 ) : (
-                                                     <CButton color="primary" onClick={() => handleSaveSequence(currentSeqData.id)}>Save</CButton>
-                                                 )}
-                                                 
-                                                 <CButton color="primary" onClick={handlePreview}>Preview</CButton>
-                                             </div>
-                                         </CCol>
-                                     </CForm>
-                                 </div>
-                             )}
+                            <div className="row g-3">
+                                <div className="col-md-6">
+                                    <label className={styles.fieldLabel}>Sequence Name</label>
+                                    <input 
+                                        type="text"
+                                        className={styles.darkInput}
+                                        value={currentSeqData.name || ''} 
+                                        onChange={(e) => updateSeqField('name', e.target.value)} 
+                                        placeholder="e.g. Initial Executive Outreach"
+                                    />
+                                </div>
+                                <div className="col-md-6">
+                                    <label className={styles.fieldLabel}>Subject Line</label>
+                                    <input 
+                                        type="text"
+                                        className={styles.darkInput}
+                                        value={currentSeqData.subject || ''} 
+                                        onChange={(e) => updateSeqField('subject', e.target.value)} 
+                                        placeholder="e.g. Quick question regarding {{company}}..."
+                                    />
+                                </div>
 
-                             {/* Reports Section - MATCHING EMAIL DELIVERY LAYOUT */}
-                             {currentSeqData && (
-                                 <CCard className="mt-4">
-                                     <CCardHeader className="bg-primary text-white d-flex align-items-center justify-content-between">
-                                         <span>Sequence {activeSequenceIndex + 1} Live Monitoring <CIcon icon={cilChart} className="ms-2"/></span>
-                                         <button className="glassy-cute-btn" onClick={() => fetchReports(currentSeqData.id)}>
-                                             <span className="glassy-cute-btn-inner"><CIcon icon={cilReload} className="cute-refresh-icon"/></span>
-                                         </button>
-                                     </CCardHeader>
-                                     <CCardBody>
-                                         {loadingReports[currentSeqData.id] && !reports[currentSeqData.id] ? (
-                                             <div className="text-center p-4">Loading reports...</div>
-                                         ) : reports[currentSeqData.id] ? (
-                                            <div>
-                                                {/* Modern Circular Progress Section */}
-                                                <div className="p-4 mb-4" style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
-                                                    {(() => {
-                                                        const stats = reports[currentSeqData.id]?.stats || {};
-                                                        const total = (stats.sent || 0) + (stats.failed || 0) + (stats.pending || 0);
-                                                        const progressPct = total > 0 ? Math.round((stats.sent / total) * 100) : 0;
-                                                        return (
-                                                            <>
-                                                                {/* Header Row with Circular Progress */}
-                                                                <div className="d-flex align-items-center gap-4 mb-4">
-                                                                    {/* Circular Progress */}
-                                                                    <div style={{ width: 100, height: 100, flexShrink: 0 }}>
-                                                                        <CircularProgressbar
-                                                                            value={progressPct}
-                                                                            text={`${progressPct}%`}
-                                                                            styles={buildStyles({
-                                                                                textSize: '22px',
-                                                                                pathColor: progressPct === 100 ? '#22c55e' : '#1db4cd',
-                                                                                textColor: '#1f2937',
-                                                                                trailColor: '#e5e7eb',
-                                                                                pathTransitionDuration: 0.5,
-                                                                            })}
-                                                                        />
-                                                                    </div>
-                                                                    
-                                                                    {/* Progress Info */}
-                                                                    <div className="flex-grow-1">
-                                                                        <div className="d-flex justify-content-between align-items-center mb-1">
-                                                                            <h5 className="mb-0 fw-bold">Sequence Progress</h5>
-                                                                            {progressPct === 100 && (
-                                                                                <CBadge color="success" className="px-3 py-2">
-                                                                                    <CIcon icon={cilCheck} className="me-1" />
-                                                                                    Completed
-                                                                                </CBadge>
-                                                                            )}
-                                                                        </div>
-                                                                        <div className="text-muted mb-2" style={{ fontSize: '15px' }}>
-                                                                            <strong>{stats.sent || 0}</strong> / {total} emails sent
-                                                                        </div>
-                                                                        {stats.pending > 0 && progressPct < 100 && (
-                                                                            <small className="text-muted">
-                                                                                ⏱️ ETA: ~{Math.max(1, Math.ceil(stats.pending / 25))} minute{Math.ceil(stats.pending / 25) > 1 ? 's' : ''} remaining
-                                                                            </small>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                                
-                                                                {/* Stats Cards */}
-                                                                <CRow className="g-3">
-                                                                    <CCol xs={6} md>
-                                                                        <div className="text-center p-3" style={{ background: 'white', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-                                                                            <div className="h4 mb-0 fw-bold" style={{ color: '#6366f1' }}>{total}</div>
-                                                                            <small className="text-muted fw-medium">Total</small>
-                                                                        </div>
-                                                                    </CCol>
-                                                                    <CCol xs={6} md>
-                                                                        <div className="text-center p-3" style={{ background: 'white', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-                                                                            <div className="h4 mb-0 fw-bold text-success">{stats.sent || 0}</div>
-                                                                            <small className="text-muted fw-medium">Sent</small>
-                                                                        </div>
-                                                                    </CCol>
-                                                                    <CCol xs={6} md>
-                                                                        <div className="text-center p-3" style={{ background: 'white', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-                                                                            <div className="h4 mb-0 fw-bold text-danger">{stats.failed || 0}</div>
-                                                                            <small className="text-muted fw-medium">Failed</small>
-                                                                        </div>
-                                                                    </CCol>
-                                                                    <CCol xs={6} md>
-                                                                        <div className="text-center p-3" style={{ background: 'white', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-                                                                            <div className="h4 mb-0 fw-bold text-warning">{stats.pending || 0}</div>
-                                                                            <small className="text-muted fw-medium">Pending</small>
-                                                                        </div>
-                                                                    </CCol>
-                                                                    <CCol xs={6} md>
-                                                                        <div className="text-center p-3" style={{ background: 'white', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-                                                                            <div className="h4 mb-0 fw-bold text-info">{stats.sending || 0}</div>
-                                                                            <small className="text-muted fw-medium">Sending</small>
-                                                                        </div>
-                                                                    </CCol>
-                                                                    <CCol xs={6} md>
-                                                                        <div className="text-center p-3" style={{ background: 'white', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-                                                                            <div className="h4 mb-0 fw-bold text-primary">{stats.replied || 0}</div>
-                                                                            <small className="text-muted fw-medium">Replied</small>
-                                                                        </div>
-                                                                    </CCol>
-                                                                </CRow>
-                                                            </>
-                                                        );
-                                                    })()}
-                                                </div>
-                                                
-                                                {/* 2. Detailed Breakdown Grid (Bounce/Unsub) */}
-                                                 <div className="stats-card mb-4">
-                                                    {['softbounce', 'hardbounce', 'unsubscribed', 'unopened', 'automatic_reply'].map(key => (
-                                                        <div key={key} className="report-category">
-                                                            <span className={`text-${key.includes('bounce') ? 'danger' : 'secondary'}`}>
-                                                                {reports[currentSeqData.id]?.stats?.[key] || 0}
-                                                            </span>
-                                                            <div>{key.replace('_', ' ')}</div>
-                                                        </div>
+                                <div className="col-md-6">
+                                    <label className={styles.fieldLabel}>Select Template</label>
+                                    <div className="d-flex">
+                                        <select 
+                                            className={`${styles.darkSelect} ${styles.selectWithAddon}`}
+                                            value={currentSeqData.template_id || ''} 
+                                            onChange={handleTemplateChange}
+                                        >
+                                            <option value="">-- Select Template --</option>
+                                            {templates.map(t => (
+                                                <option key={t.id || t._id} value={t.id || t._id}>{t.title}</option>
+                                            ))}
+                                        </select>
+                                        <button 
+                                            type="button" 
+                                            className={styles.inputGroupAddonBtn}
+                                            onClick={handleAddTemplate}
+                                        >
+                                            <CIcon icon={cilPlus} size="sm" />
+                                            New
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {activeSequenceIndex === 0 ? (
+                                    <>
+                                        <div className="col-md-6">
+                                            <label className={styles.fieldLabel}>Select Audience Segment</label>
+                                            <div className="d-flex">
+                                                <select 
+                                                    className={`${styles.darkSelect} ${styles.selectWithAddon}`}
+                                                    value={currentSeqData.audience_id || ''} 
+                                                    onChange={(e) => updateSeqField('audience_id', e.target.value)}
+                                                >
+                                                    <option value="">-- Select Audience --</option>
+                                                    {audiences.map(a => (
+                                                        <option key={a.id || a._id} value={a.id || a._id}>{a.name}</option>
                                                     ))}
-                                                 </div>
-
-                                                {/* 3. Per Account Stats Table */}
-                                                {reports[currentSeqData.id]?.per_account_stats?.length > 0 && (
-                                                    <div className="mt-4">
-                                                        <h5>Per Account Send Status</h5>
-                                                        <CTable striped responsive hover>
-                                                            <CTableHead>
-                                                                <CTableRow>
-                                                                    <CTableHeaderCell>Account</CTableHeaderCell>
-                                                                    <CTableHeaderCell>Total Assigned</CTableHeaderCell>
-                                                                    <CTableHeaderCell>Sent</CTableHeaderCell>
-                                                                    <CTableHeaderCell>Sending</CTableHeaderCell>
-                                                                    <CTableHeaderCell>Pending</CTableHeaderCell>
-                                                                    <CTableHeaderCell>Failed</CTableHeaderCell>
-                                                                    <CTableHeaderCell>Last Sent</CTableHeaderCell>
-                                                                    <CTableHeaderCell>Last Error</CTableHeaderCell>
-                                                                </CTableRow>
-                                                            </CTableHead>
-                                                            <CTableBody>
-                                                                {reports[currentSeqData.id].per_account_stats.map((account) => (
-                                                                    <CTableRow key={account.from_email}>
-                                                                        <CTableDataCell>{account.from_email}</CTableDataCell>
-                                                                        <CTableDataCell>{account.total}</CTableDataCell>
-                                                                        <CTableDataCell className="text-success">{account.sent}</CTableDataCell>
-                                                                        <CTableDataCell className="text-info">{account.sending}</CTableDataCell>
-                                                                        <CTableDataCell className="text-warning">{account.pending}</CTableDataCell>
-                                                                        <CTableDataCell className="text-danger">{account.failed}</CTableDataCell>
-                                                                        <CTableDataCell>{formatDateTime(account.last_sent_at)}</CTableDataCell>
-                                                                        <CTableDataCell>
-                                                                             {account.last_error ? (
-                                                                                <span className="text-danger" title={account.last_error}>
-                                                                                    {account.last_error.substring(0, 30) + (account.last_error.length > 30 ? '...' : '')}
-                                                                                </span>
-                                                                            ) : '—'}
-                                                                        </CTableDataCell>
-                                                                    </CTableRow>
-                                                                ))}
-                                                            </CTableBody>
-                                                        </CTable>
-                                                    </div>
-                                                )}
-
-                                                {/* 4. Failed Emails Table */}
-                                                {reports[currentSeqData.id]?.failed_details?.length > 0 && (
-                                                    <div className="mt-4">
-                                                        <h5>Failed Emails</h5>
-                                                        <CTable striped hover responsive>
-                                                            <CTableHead>
-                                                                <CTableRow>
-                                                                    <CTableHeaderCell>Email</CTableHeaderCell>
-                                                                    <CTableHeaderCell>Error Message</CTableHeaderCell>
-                                                                </CTableRow>
-                                                            </CTableHead>
-                                                            <CTableBody>
-                                                                {reports[currentSeqData.id].failed_details.map((detail, index) => (
-                                                                    <CTableRow key={index}>
-                                                                        <CTableDataCell>{detail.to_email}</CTableDataCell>
-                                                                        <CTableDataCell className="text-danger">{detail.error_message}</CTableDataCell>
-                                                                    </CTableRow>
-                                                                ))}
-                                                            </CTableBody>
-                                                        </CTable>
-                                                    </div>
-                                                )}
-
+                                                </select>
+                                                <button 
+                                                    type="button" 
+                                                    className={styles.inputGroupAddonBtn}
+                                                    onClick={() => setShowAudienceModal(true)}
+                                                >
+                                                    <CIcon icon={cilPlus} size="sm" />
+                                                    New
+                                                </button>
                                             </div>
-                                         ) : (
-                                             <div className="text-muted text-center pt-5 pb-5">
-                                                 <CIcon icon={cilChart} size="4xl" className="mb-3 text-light-gray"/>
-                                                 <p>This sequence has not started yet.</p>
-                                                 <p>Once started, live monitoring will appear here.</p>
-                                             </div>
-                                         )}
-                                     </CCardBody>
-                                 </CCard>
-                             )}
-                         </div>
-                     )}
-                </CCardBody>
-            </CCard>
+                                        </div>
+
+                                        <div className="col-md-6">
+                                            <label className={styles.fieldLabel}>
+                                                Time Gap Between Batches (seconds)
+                                                <CTooltip content="Time gap applies only between dispatched batches">
+                                                    <CIcon icon={cilInfo} className="ms-1 text-muted" size="sm"/>
+                                                </CTooltip>
+                                            </label>
+                                            <input 
+                                                type="number" 
+                                                min="1" 
+                                                className={styles.darkInput}
+                                                value={currentSeqData.time_gap || 5} 
+                                                onChange={(e) => updateSeqField('time_gap', parseInt(e.target.value) || 5)} 
+                                            />
+                                        </div>
+
+                                        <div className="col-md-6">
+                                            <label className={styles.fieldLabel}>Assignment Mode</label>
+                                            <div className="d-flex">
+                                                <select 
+                                                    className={`${styles.darkSelect} ${styles.selectWithAddon}`}
+                                                    value={currentSeqData.assignment_mode || 'batch_size'} 
+                                                    onChange={(e) => updateSeqField('assignment_mode', e.target.value)}
+                                                >
+                                                    <option value="batch_size">Batch Size (Even Distribution)</option>
+                                                    <option value="manual_assign">Manual Assign (Account Specific)</option>
+                                                </select>
+                                                <button 
+                                                    type="button" 
+                                                    className={styles.inputGroupAddonBtn}
+                                                    onClick={openAssignmentModal}
+                                                >
+                                                    Configure
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="col-md-6">
+                                        <label className={styles.fieldLabel}>
+                                            Select Report Filters (Sequence {activeSequenceIndex})
+                                        </label>
+                                        <MultiSelectChips 
+                                            options={CATEGORY_OPTIONS}
+                                            value={currentSeqData.categories || []}
+                                            onChange={(val) => updateSeqField('categories', val)}
+                                            placeholder="Select report filters (e.g. Unopened, Replied)..."
+                                        />
+                                        <div className={styles.fieldHelper}>
+                                            Subscribers matching these engagement criteria from the prior sequence will receive this stage.
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* From Emails with Regions Support */}
+                                <div className="col-md-6">
+                                    <div className="d-flex justify-content-between align-items-center mb-1">
+                                        <label className={styles.fieldLabel} style={{ marginBottom: 0 }}>From Email Senders</label>
+                                        <span className="text-muted" style={{ fontSize: '0.75rem' }}>
+                                            {(currentSeqData.from_emails || []).length} Selected
+                                        </span>
+                                    </div>
+                                    <EmailSenderDropdown 
+                                        regions={regions}
+                                        emailAccounts={emailAccounts}
+                                        value={currentSeqData.from_emails || []}
+                                        onChange={(newEmails) => updateSeqField('from_emails', newEmails)}
+                                    />
+                                    <div className={styles.fieldHelper}>
+                                        Select sender inboxes to rotate and distribute sequence emails across connected domains.
+                                    </div>
+                                </div>
+
+                                <div className="col-md-6">
+                                    <label className={styles.fieldLabel}>Wait Time for Next Sequence</label>
+                                    <div className="d-flex">
+                                        <input 
+                                            type="number" 
+                                            min="0" 
+                                            className={`${styles.darkInput} ${styles.selectWithAddon}`}
+                                            value={currentSeqData.wait_time || 0} 
+                                            onChange={(e) => updateSeqField('wait_time', parseInt(e.target.value) || 0)}
+                                            disabled={activeSequenceIndex === sequences.length - 1} 
+                                        />
+                                        <select 
+                                            className={styles.darkSelect}
+                                            style={{ width: '130px', borderTopLeftRadius: 0, borderBottomLeftRadius: 0, borderLeft: 'none' }}
+                                            value={currentSeqData.wait_unit || 'minutes'} 
+                                            onChange={(e) => updateSeqField('wait_unit', e.target.value)}
+                                            disabled={activeSequenceIndex === sequences.length - 1}
+                                        >
+                                            {WAIT_UNIT_OPTIONS.map(o => (
+                                                <option key={o.value} value={o.value}>{o.label}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className={styles.fieldHelper}>
+                                        {activeSequenceIndex === sequences.length - 1 
+                                            ? 'Final stage in this drip sequence.' 
+                                            : 'Delay before dispatching subsequent touchpoint stage.'}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Form Action Buttons Bar */}
+                            <div className={styles.formActionsRow}>
+                                {activeSequenceIndex === sequences.length - 1 && (
+                                    <div className={styles.executionActions}>
+                                        <button 
+                                            type="button" 
+                                            className={styles.sendNowBtn} 
+                                            onClick={() => handleSendImmediately(currentSeqData.id)}
+                                        >
+                                            <CIcon icon={cilMediaPlay} />
+                                            Send Immediately
+                                        </button>
+                                        <button 
+                                            type="button" 
+                                            className={styles.scheduleBtn} 
+                                            onClick={() => setModalState(prev => ({...prev, schedule: true}))}
+                                        >
+                                            <CIcon icon={cilClock} />
+                                            Schedule Sequence
+                                        </button>
+                                    </div>
+                                )}
+
+                                <div className={styles.workflowActions}>
+                                    <button 
+                                        type="button" 
+                                        className={styles.outlineBtn} 
+                                        disabled={activeSequenceIndex === 0} 
+                                        onClick={() => handleSaveSequence(currentSeqData.id, 'prev')}
+                                    >
+                                        <CIcon icon={cilChevronLeft} />
+                                        Previous
+                                    </button>
+                                    
+                                    {activeSequenceIndex < sequences.length - 1 ? (
+                                        <button 
+                                            type="button" 
+                                            className={styles.outlineBtn} 
+                                            onClick={() => handleSaveSequence(currentSeqData.id, 'next')}
+                                        >
+                                            Next
+                                            <CIcon icon={cilChevronRight} />
+                                        </button>
+                                    ) : (
+                                        <button 
+                                            type="button" 
+                                            className={styles.saveSeqBtn} 
+                                            onClick={() => handleSaveSequence(currentSeqData.id)}
+                                        >
+                                            <CIcon icon={cilSave} />
+                                            Save Stage
+                                        </button>
+                                    )}
+                                    
+                                    <button 
+                                        type="button" 
+                                        className={styles.outlineBtn} 
+                                        onClick={handlePreview}
+                                    >
+                                        <CIcon icon={cilSearch} />
+                                        Preview
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Reports & Live Telemetry Section */}
+                    {currentSeqData && (
+                        <div className={styles.monitoringCard}>
+                            <div className={styles.monitoringHeader}>
+                                <div className={styles.monitoringTitle}>
+                                    <span className={styles.monitoringLiveDot} />
+                                    <span>Sequence {activeSequenceIndex + 1} Live Telemetry & Monitoring</span>
+                                </div>
+                                <button className={styles.refreshBtn} onClick={() => fetchReports(currentSeqData.id)}>
+                                    <CIcon icon={cilReload} />
+                                    Refresh Telemetry
+                                </button>
+                            </div>
+                            <div className={styles.monitoringBody}>
+                                {loadingReports[currentSeqData.id] && !reports[currentSeqData.id] ? (
+                                    <div className="text-center p-5 text-muted">
+                                        <CSpinner size="sm" className="me-2" />
+                                        Loading real-time sequence reports...
+                                    </div>
+                                ) : reports[currentSeqData.id] ? (
+                                    <div>
+                                        {/* Circular Progress & High Level Stats */}
+                                        <div className={styles.progressHeroCard}>
+                                            {(() => {
+                                                const stats = reports[currentSeqData.id]?.stats || {};
+                                                const total = (stats.sent || 0) + (stats.failed || 0) + (stats.pending || 0);
+                                                const progressPct = total > 0 ? Math.round((stats.sent / total) * 100) : 0;
+                                                return (
+                                                    <>
+                                                        <div className={styles.progressHeroTop}>
+                                                            <div className={styles.circularWrapper}>
+                                                                <CircularProgressbar
+                                                                    value={progressPct}
+                                                                    text={`${progressPct}%`}
+                                                                    styles={buildStyles({
+                                                                        textSize: '22px',
+                                                                        pathColor: progressPct === 100 ? '#10b981' : '#6366f1',
+                                                                        textColor: '#ffffff',
+                                                                        trailColor: 'rgba(255, 255, 255, 0.08)',
+                                                                        pathTransitionDuration: 0.5,
+                                                                    })}
+                                                                />
+                                                            </div>
+                                                            <div className={styles.progressInfo}>
+                                                                <div className={styles.progressTitleRow}>
+                                                                    <h5 className={styles.progressTitle}>Sequence Dispatch Progress</h5>
+                                                                    {progressPct === 100 ? (
+                                                                        <CBadge color="success" className="px-3 py-2">
+                                                                            <CIcon icon={cilCheck} className="me-1" />
+                                                                            Completed
+                                                                        </CBadge>
+                                                                    ) : (
+                                                                        <CBadge color="info" className="px-3 py-2">
+                                                                            In Progress
+                                                                        </CBadge>
+                                                                    )}
+                                                                </div>
+                                                                <div className={styles.progressSentText}>
+                                                                    <strong style={{ color: '#ffffff' }}>{stats.sent || 0}</strong> of {total} emails dispatched
+                                                                </div>
+                                                                {stats.pending > 0 && progressPct < 100 && (
+                                                                    <div className={styles.progressEtaText}>
+                                                                        ⏱️ Estimated completion: ~{Math.max(1, Math.ceil(stats.pending / 25))} minute{Math.ceil(stats.pending / 25) > 1 ? 's' : ''} remaining
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Primary Metrics Grid */}
+                                                        <div className={styles.monitorStatsGrid}>
+                                                            <div className={styles.monitorStatItem}>
+                                                                <div className={styles.monitorStatValue} style={{ color: '#818cf8' }}>{total}</div>
+                                                                <div className={styles.monitorStatLabel}>Total</div>
+                                                            </div>
+                                                            <div className={styles.monitorStatItem}>
+                                                                <div className={styles.monitorStatValue} style={{ color: '#34d399' }}>{stats.sent || 0}</div>
+                                                                <div className={styles.monitorStatLabel}>Sent</div>
+                                                            </div>
+                                                            <div className={styles.monitorStatItem}>
+                                                                <div className={styles.monitorStatValue} style={{ color: '#f87171' }}>{stats.failed || 0}</div>
+                                                                <div className={styles.monitorStatLabel}>Failed</div>
+                                                            </div>
+                                                            <div className={styles.monitorStatItem}>
+                                                                <div className={styles.monitorStatValue} style={{ color: '#fbbf24' }}>{stats.pending || 0}</div>
+                                                                <div className={styles.monitorStatLabel}>Pending</div>
+                                                            </div>
+                                                            <div className={styles.monitorStatItem}>
+                                                                <div className={styles.monitorStatValue} style={{ color: '#38bdf8' }}>{stats.sending || 0}</div>
+                                                                <div className={styles.monitorStatLabel}>Sending</div>
+                                                            </div>
+                                                            <div className={styles.monitorStatItem}>
+                                                                <div className={styles.monitorStatValue} style={{ color: '#c084fc' }}>{stats.replied || 0}</div>
+                                                                <div className={styles.monitorStatLabel}>Replied</div>
+                                                            </div>
+                                                        </div>
+                                                    </>
+                                                );
+                                            })()}
+                                        </div>
+
+                                        {/* Deliverability & Bounce Breakdown */}
+                                        <div className={styles.breakdownGrid}>
+                                            {['softbounce', 'hardbounce', 'unsubscribed', 'unopened', 'automatic_reply'].map(key => {
+                                                const val = reports[currentSeqData.id]?.stats?.[key] || 0;
+                                                const isBounce = key.includes('bounce');
+                                                return (
+                                                    <div key={key} className={styles.breakdownItem}>
+                                                        <div className={styles.breakdownValue} style={{ color: isBounce ? '#f87171' : '#94a3b8' }}>
+                                                            {val}
+                                                        </div>
+                                                        <div className={styles.breakdownLabel}>
+                                                            {key.replace('_', ' ')}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+
+                                        {/* Per Account Send Status Table */}
+                                        {reports[currentSeqData.id]?.per_account_stats?.length > 0 && (
+                                            <div className={styles.tableCard}>
+                                                <div className={styles.tableHeaderBar}>
+                                                    Per Account Send Status & Telemetry
+                                                </div>
+                                                <div className={styles.tableResponsive}>
+                                                    <table className={styles.customTable}>
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Sender Inbox</th>
+                                                                <th>Assigned</th>
+                                                                <th>Sent</th>
+                                                                <th>Sending</th>
+                                                                <th>Pending</th>
+                                                                <th>Failed</th>
+                                                                <th>Last Sent At</th>
+                                                                <th>Last Error</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {reports[currentSeqData.id].per_account_stats.map((account) => (
+                                                                <tr key={account.from_email}>
+                                                                    <td style={{ fontWeight: 600, color: '#f1f5f9' }}>{account.from_email}</td>
+                                                                    <td>{account.total}</td>
+                                                                    <td style={{ color: '#34d399', fontWeight: 600 }}>{account.sent}</td>
+                                                                    <td style={{ color: '#38bdf8', fontWeight: 600 }}>{account.sending}</td>
+                                                                    <td style={{ color: '#fbbf24', fontWeight: 600 }}>{account.pending}</td>
+                                                                    <td style={{ color: '#f87171', fontWeight: 600 }}>{account.failed}</td>
+                                                                    <td>{formatDateTime(account.last_sent_at)}</td>
+                                                                    <td>
+                                                                        {account.last_error ? (
+                                                                            <span style={{ color: '#f87171', fontSize: '0.8rem' }} title={account.last_error}>
+                                                                                {account.last_error.substring(0, 30) + (account.last_error.length > 30 ? '...' : '')}
+                                                                            </span>
+                                                                        ) : '—'}
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Failed Emails Table */}
+                                        {reports[currentSeqData.id]?.failed_details?.length > 0 && (
+                                            <div className={styles.tableCard}>
+                                                <div className={styles.tableHeaderBar} style={{ color: '#f87171' }}>
+                                                    Failed Recipients Log
+                                                </div>
+                                                <div className={styles.tableResponsive}>
+                                                    <table className={styles.customTable}>
+                                                        <thead>
+                                                            <tr>
+                                                                <th>Recipient Address</th>
+                                                                <th>Dispatch Error Detail</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {reports[currentSeqData.id].failed_details.map((detail, index) => (
+                                                                <tr key={index}>
+                                                                    <td style={{ fontWeight: 600, color: '#f1f5f9' }}>{detail.to_email}</td>
+                                                                    <td style={{ color: '#f87171' }}>{detail.error_message}</td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className={styles.emptyMonitoring}>
+                                        <div className={styles.emptyIconWrapper}>
+                                            <CIcon icon={cilChart} size="2xl" />
+                                        </div>
+                                        <h4 className={styles.emptyTitle}>Sequence Telemetry Pending Dispatch</h4>
+                                        <p className={styles.emptySubtitle}>
+                                            This sequence has not started sending yet. Once dispatched or scheduled, real-time batch metrics, deliverability health, and account throughput will stream here live.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* --- Modals --- */}
             
@@ -2013,12 +2095,12 @@ const Driftemail = () => {
                         </div>
                     ) : (
                         <div>
-                            <div className="mb-3 p-3" style={{ background: '#f8f9fa', borderRadius: '8px' }}>
-                                <strong>Subject:</strong> {previewContent.subject}
+                            <div className="mb-3 p-3" style={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px' }}>
+                                <strong style={{ color: '#818cf8' }}>Subject:</strong> <span style={{ color: '#ffffff' }}>{previewContent.subject}</span>
                             </div>
                             <div 
-                                className="p-3" 
-                                style={{ border: '1px solid #dee2e6', borderRadius: '8px', minHeight: '300px' }}
+                                className="p-4" 
+                                style={{ background: '#ffffff', color: '#1e293b', borderRadius: '8px', minHeight: '300px' }}
                                 dangerouslySetInnerHTML={{ __html: previewContent.content }}
                             />
                         </div>
@@ -2038,7 +2120,7 @@ const Driftemail = () => {
                     {success && <CAlert color="success" dismissible onClose={() => setSuccess('')}>{success}</CAlert>}
                 </div>
             )}
-        </>
+        </div>
     );
 };
 

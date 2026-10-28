@@ -40,9 +40,12 @@ export default async function handler(req, res) {
     
     // Verify the email belongs to an account owned by the current user
     let account = null;
-    if (email && email.email_account_id) {
+    if (email) {
       account = await accountsCollection.findOne({ 
-        id: email.email_account_id,
+        $or: [
+          ...(email.email_account_id ? [{ id: email.email_account_id }] : []),
+          ...(email.account_email ? [{ email: email.account_email }] : [])
+        ],
         user_id: user.user_id
       });
       

@@ -10,6 +10,11 @@ const defaultConnection = process.env.DB_CONNECTION || 'central';
  * Database Connection Configurations
  * Each connection has its own URI and can be used independently
  */
+function switchDatabase(uri, dbName) {
+  if (!uri) return null;
+  return uri.replace(/(\/[^/?]+)(\?.*)?$/, (match, p1, p2) => "/" + dbName + (p2 || ""));
+}
+
 const connections = {
   // Default/Central database (main application database)
   central: {
@@ -30,7 +35,7 @@ const connections = {
 
   // Pluto database
   pluto: {
-    uri: process.env.PLUTO_MONGODB_URI || process.env.MONGODB_URI?.replace(/\/[^\/]+$/, '/pluto') || 'mongodb://localhost:27017/pluto',
+    uri: process.env.PLUTO_MONGODB_URI || switchDatabase(process.env.MONGODB_URI, "pluto") || 'mongodb://localhost:27017/pluto',
     database: process.env.PLUTO_DATABASE || 'pluto',
     options: {
       maxPoolSize: 20,
@@ -47,7 +52,7 @@ const connections = {
 
   // Sun database
   sun: {
-    uri: process.env.SUN_MONGODB_URI || process.env.MONGODB_URI?.replace(/\/[^\/]+$/, '/sun') || 'mongodb://localhost:27017/sun',
+    uri: process.env.SUN_MONGODB_URI || switchDatabase(process.env.MONGODB_URI, "sun") || 'mongodb://localhost:27017/sun',
     database: process.env.SUN_DATABASE || 'sun',
     options: {
       maxPoolSize: 20,
@@ -64,7 +69,7 @@ const connections = {
 
   // Moon database
   moon: {
-    uri: process.env.MOON_MONGODB_URI || process.env.MONGODB_URI?.replace(/\/[^\/]+$/, '/moon') || 'mongodb://localhost:27017/moon',
+    uri: process.env.MOON_MONGODB_URI || switchDatabase(process.env.MONGODB_URI, "moon") || 'mongodb://localhost:27017/moon',
     database: process.env.MOON_DATABASE || 'moon',
     options: {
       maxPoolSize: 20,
@@ -81,7 +86,7 @@ const connections = {
 
   // Mars database
   mars: {
-    uri: process.env.MARS_MONGODB_URI || process.env.MONGODB_URI?.replace(/\/[^\/]+$/, '/mars') || 'mongodb://localhost:27017/mars',
+    uri: process.env.MARS_MONGODB_URI || switchDatabase(process.env.MONGODB_URI, "mars") || 'mongodb://localhost:27017/mars',
     database: process.env.MARS_DATABASE || 'mars',
     options: {
       maxPoolSize: 20,
@@ -98,7 +103,7 @@ const connections = {
 
   // Jupiter database
   jupiter: {
-    uri: process.env.JUPITER_MONGODB_URI || process.env.MONGODB_URI?.replace(/\/[^\/]+$/, '/jupiter') || 'mongodb://localhost:27017/jupiter',
+    uri: process.env.JUPITER_MONGODB_URI || switchDatabase(process.env.MONGODB_URI, "jupiter") || 'mongodb://localhost:27017/jupiter',
     database: process.env.JUPITER_DATABASE || 'jupiter',
     options: {
       maxPoolSize: 20,
@@ -115,7 +120,7 @@ const connections = {
 
   // Earth database
   earth: {
-    uri: process.env.EARTH_MONGODB_URI || process.env.MONGODB_URI?.replace(/\/[^\/]+$/, '/earth') || 'mongodb://localhost:27017/earth',
+    uri: process.env.EARTH_MONGODB_URI || switchDatabase(process.env.MONGODB_URI, "earth") || 'mongodb://localhost:27017/earth',
     database: process.env.EARTH_DATABASE || 'earth',
     options: {
       maxPoolSize: 20,
@@ -132,7 +137,7 @@ const connections = {
 
   // Mercury database
   mercury: {
-    uri: process.env.MERCURY_MONGODB_URI || process.env.MONGODB_URI?.replace(/\/[^\/]+$/, '/mercury') || 'mongodb://localhost:27017/mercury',
+    uri: process.env.MERCURY_MONGODB_URI || switchDatabase(process.env.MONGODB_URI, "mercury") || 'mongodb://localhost:27017/mercury',
     database: process.env.MERCURY_DATABASE || 'mercury',
     options: {
       maxPoolSize: 20,
@@ -149,7 +154,7 @@ const connections = {
 
   // Saturn database
   saturn: {
-    uri: process.env.SATURN_MONGODB_URI || process.env.MONGODB_URI?.replace(/\/[^\/]+$/, '/saturn') || 'mongodb://localhost:27017/saturn',
+    uri: process.env.SATURN_MONGODB_URI || switchDatabase(process.env.MONGODB_URI, "saturn") || 'mongodb://localhost:27017/saturn',
     database: process.env.SATURN_DATABASE || 'saturn',
     options: {
       maxPoolSize: 20,
@@ -166,7 +171,7 @@ const connections = {
 
   // Neptune database
   neptune: {
-    uri: process.env.NEPTUNE_MONGODB_URI || process.env.MONGODB_URI?.replace(/\/[^\/]+$/, '/neptune') || 'mongodb://localhost:27017/neptune',
+    uri: process.env.NEPTUNE_MONGODB_URI || switchDatabase(process.env.MONGODB_URI, "neptune") || 'mongodb://localhost:27017/neptune',
     database: process.env.NEPTUNE_DATABASE || 'neptune',
     options: {
       maxPoolSize: 20,
@@ -185,7 +190,7 @@ const connections = {
   automation: {
     uri:
       process.env.AUTOMATION_MONGODB_URI ||
-      process.env.MONGODB_URI?.replace(/\/[^\/]+$/, '/automation') ||
+      switchDatabase(process.env.MONGODB_URI, "automation") ||
       'mongodb://localhost:27017/automation',
     database: process.env.AUTOMATION_DATABASE || 'automation',
     options: {
@@ -203,7 +208,7 @@ const connections = {
 
   // Business database (optional, for future use)
   business: {
-    uri: process.env.BUSINESS_MONGODB_URI || process.env.MONGODB_URI?.replace(/\/[^\/]+$/, '/business') || 'mongodb://localhost:27017/business',
+    uri: process.env.BUSINESS_MONGODB_URI || switchDatabase(process.env.MONGODB_URI, "business") || 'mongodb://localhost:27017/business',
     database: process.env.BUSINESS_DATABASE || 'business',
     options: {
       maxPoolSize: 20,

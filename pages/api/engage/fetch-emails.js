@@ -77,17 +77,20 @@ export default async function handler(req, res) {
       }
     }
 
-    const query = {
-      category: category
-    };
-
+    const accountFilter = [];
     if (idCandidates.length === 1) {
-      query.email_account_id = idCandidates[0];
+      accountFilter.push({ email_account_id: idCandidates[0] });
     } else if (idCandidates.length > 1) {
-      query.email_account_id = { $in: idCandidates };
-    } else {
-      query.account_email = account.email;
+      accountFilter.push({ email_account_id: { $in: idCandidates } });
     }
+    if (account.email) {
+      accountFilter.push({ account_email: account.email });
+    }
+
+    const query = {
+      category: category,
+      ...(accountFilter.length > 1 ? { $or: accountFilter } : accountFilter[0] || {})
+    };
 
     // Build status filter - MUST be exact match to prevent cross-category filtering
     // This is critical: we need to ensure emails with status='automatic_reply' 
